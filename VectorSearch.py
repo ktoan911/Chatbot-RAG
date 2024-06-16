@@ -4,11 +4,24 @@ import embedding
 mongo_uri = "mongodb+srv://ktoan911:ci12ZbPRMJSNjRoB@cluster0.ogeezq3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 
+def get_mongo_client(mongo_uri):
+    """Establish connection to the MongoDB."""
+    try:
+        client = pymongo.MongoClient(
+            mongo_uri, appname="devrel.content.python")
+        print("Connection to MongoDB successful")
+        return client
+    except pymongo.errors.ConnectionFailure as e:
+        print(f"Connection failed: {e}")
+        return None
+
+client = get_mongo_client(mongo_uri)
+
 class VectorSearch:
     def __init__(self, db_name='Phone', collection_name='Phone_Type'):
         if not mongo_uri:
             raise ValueError("MongoDB URI is missing")
-        self.client = self.get_mongo_client(mongo_uri)
+        self.client = client
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
 
@@ -40,7 +53,7 @@ class VectorSearch:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    def vector_search(self, user_query, collection):
+    def vector_search(self, user_query, collection, num_candidates=100, k=5):
         """
         Perform a vector search in the MongoDB collection based on the user query.
 
@@ -64,8 +77,8 @@ class VectorSearch:
                 "index": "vector_index",
                 "queryVector": query_embedding,
                 "path": "embedding",
-                "numCandidates": 100,  # Number of candidate matches to consider
-                "limit": 4  # Return top 4 matches
+                "numCandidates": num_candidates,  # Number of candidate matches to consider
+                "limit": k  # Return top 4 matches
             }
         }
 
@@ -93,16 +106,16 @@ class VectorSearch:
         results = collection.aggregate(pipeline)
         return list(results)
 
-    def get_search_result(self, query, collection, combine_query=False):
+    def get_search_result(self, query, num_candidates=100, k=5, combine_query=True):
 
-        db_information = self.vector_search(query, collection)
+        db_information = self.vector_search(
+            query, self.collection, num_candidates, k)
 
         search_result = ""
         for result in db_information:
-            print('---result', result)
             search_result += f"Phone: {result.get('Phone', 'N/A')}, Features: {result.get('Features', 'N/A')}, Description: {result.get('Description', 'N/A')}, specs: {result.get('specs', 'N/A')}, price: {result.get('price', 'N/A')}\n"
         if not combine_query:
             return search_result
         else:
-            prompt_query += ". " + "Answer like a salesperson using some information below:"
+            prompt_query = query + ". " + "I know that your store has some phones:"
             return f"Query: {prompt_query} \n {search_result}."
