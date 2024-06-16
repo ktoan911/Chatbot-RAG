@@ -117,5 +117,5 @@ class VectorSearch:
         if not combine_query:
             return search_result
         else:
-            prompt_query = query + ". " + "I know that your store has some phones:"
+            prompt_query = query + ". " + "Choose one of them:"
             return f"Query: {prompt_query} \n {search_result}."
