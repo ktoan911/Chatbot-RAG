@@ -11,7 +11,7 @@ Chatbot hỗ trợ tiếp thị điện thoại sử dụng kiến trúc RAG (Re
 
 ## Architecture Image
 
-![image](Assets/Architecture.jpg)
+
 
 ## I.  Set up environment
 - Step 1: create a Conda environment named your_env_name with Python version  3.11.3
