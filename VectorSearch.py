@@ -1,5 +1,5 @@
 import pymongo
-import embedding
+from text_process import get_embedding
 
 mongo_uri = "mongodb+srv://ktoan911:ci12ZbPRMJSNjRoB@cluster0.ogeezq3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
@@ -55,7 +55,7 @@ class VectorSearch:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    def vector_search(self, user_query, collection, num_candidates=100, k=5):
+    def vector_search(self, user_query, collection, num_candidates=100, k=2):
         """
         Perform a vector search in the MongoDB collection based on the user query.
 
@@ -68,7 +68,7 @@ class VectorSearch:
         """
 
         # Generate embedding for the user query
-        query_embedding = embedding.get_embedding(user_query)
+        query_embedding = get_embedding(user_query)
 
         if query_embedding is None:
             return "Invalid query or embedding generation failed."
@@ -108,7 +108,7 @@ class VectorSearch:
         results = collection.aggregate(pipeline)
         return list(results)
 
-    def get_search_result(self, query, num_candidates=100, k=5, combine_query=True):
+    def get_search_result(self, query, num_candidates=100, k=2, combine_query=True):
 
         db_information = self.vector_search(
             query, self.collection, num_candidates, k)
@@ -117,13 +117,14 @@ class VectorSearch:
 
         for result in db_information:
             phone = result.get('Phone', 'N/A')
-            features = result.get('Features', 'N/A').replace('\n', ' ')
+            features = result.get(
+                'Features', 'N/A').replace('\n', ' ').replace('|', ',').replace('\t', ' ')
             description = result.get('Description', 'N/A').replace('\n', ' ')
             price = result.get('price', 'N/A')
-            search_result += f"Phone: {phone}, Features: {features}, Description: {description}, price: {price}\n"
+            search_result += f"Phone: {phone},Description: {description}, Features: {features}, Price: {price} VND\n"
 
         if not combine_query:
             return search_result
         else:
-            prompt_query = query + ". " + "Choose one of them:"
+            prompt_query = query + ". " + "Answer with information below:"
             return f"Query: {prompt_query} \n {search_result}."
