@@ -2,7 +2,6 @@ import openai
 import streamlit as st
 import VectorSearch
 from text_process import process_query
-import time
 
 # from dotenv import load_dotenv
 # load_dotenv()
@@ -14,27 +13,27 @@ client = openai.OpenAI(
     base_url="https://api.together.xyz/v1",
 )
 
+
 def get_code_completion(messages, max_tokens=512, model="meta-llama/Llama-3-70b-chat-hf", retries=5, delay=2):
-    for attempt in range(retries):
-        try:
-            chat_completion = client.chat.completions.create(
-                messages=messages,
-                model=model,
-                max_tokens=max_tokens,
-                stop=["<step>"],
-                frequency_penalty=1,
-                presence_penalty=1,
-                top_p=0.7,
-                n=1,
-                temperature=0.7,
-            )
-            return chat_completion
-        except openai.error.OpenAIError as e:
-            if attempt < retries - 1:
-                time.sleep(delay)
-                delay *= 2  # Exponential backoff
-            else:
-                raise e
+    chat_completion = client.chat.completions.create(
+        messages=messages,
+        model=model,
+        max_tokens=max_tokens,
+        stop=["<step>"],
+        frequency_penalty=1,
+        presence_penalty=1,
+        top_p=0.7,
+        n=1,
+        temperature=0.7,
+    )
+    return chat_completion
+# except openai.error.OpenAIError as e:
+#     if attempt < retries - 1:
+#         time.sleep(delay)
+#         delay *= 2  # Exponential backoff
+#     else:
+#         raise e
+
 
 # Streamlit app title
 st.title("Phone Sales Assistant Chatbot")
@@ -50,20 +49,18 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": "Hello! For great camera quality, I would recommend the following models: iPhone 14 Pro, Samsung Galaxy S23 Ultra, and Google Pixel 7 Pro. These phones all have high-quality cameras and advanced photography features. Do you have any other specific requirements, such as battery life or storage capacity?"}
     ]
 
-# Display chat messages from history on app rerun
-# for message in st.session_state.messages:
-#     with st.chat_message(message["role"]):
-#         st.markdown(message["content"])
 
 # Accept user input
-if prompt := st.chat_input("What phone do you need?"):
+if prompt := st.chat_input("Can I help you with anything?"):
     # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    #vector search db
-    combined_information = vector_search.get_search_result(process_query(prompt))
-    st.session_state.messages.append({"role": "user", "content": combined_information})
+    # vector search db
+    combined_information = vector_search.get_search_result(
+        process_query(prompt))
+    st.session_state.messages.append(
+        {"role": "user", "content": combined_information})
 
     # Generate assistant's response
     with st.chat_message("assistant"):
@@ -71,4 +68,5 @@ if prompt := st.chat_input("What phone do you need?"):
             chat_completion = get_code_completion(st.session_state.messages)
             response = chat_completion.choices[0].message.content
             st.markdown(response)
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": response})

@@ -16,9 +16,9 @@ vector_search = VectorSearch.VectorSearch()
 # Initialize chat history in session state
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "system", "content": "You are a phone sales representative in a mobile phone store. Your task is to help customers find the best phone that suits their needs."},
-        {"role": "user", "content": "Hello, I'm looking for a phone with a great camera. Can you suggest a few models?"},
-        {"role": "assistant", "content": "Hello! For great camera quality, I would recommend the following models: iPhone 14 Pro, Samsung Galaxy S23 Ultra, and Google Pixel 7 Pro. These phones all have high-quality cameras and advanced photography features. Do you have any other specific requirements, such as battery life or storage capacity?"}
+        {"role": "system", "content": "You are a phone sales representative in a mobile phone store. Your task is to help customers find the best phone that suits their needs."}
+        # {"role": "user", "content": "Hello, I'm looking for a phone with a great camera. Can you suggest a few models?"},
+        # {"role": "assistant", "content": "Hello! For great camera quality, I would recommend the following models: iPhone 14 Pro, Samsung Galaxy S23 Ultra, and Google Pixel 7 Pro. These phones all have high-quality cameras and advanced photography features. Do you have any other specific requirements, such as battery life or storage capacity?"}
     ]
 
 # Display chat messages from history on app rerun
@@ -40,5 +40,6 @@ if prompt := st.chat_input("What phone do you need?"):
     with st.chat_message("assistant"):
         with st.spinner("Generating response..."):
             response = model.generate_text(st.session_state.messages)
+            print(response)
             st.markdown(response)
     st.session_state.messages.append({"role": "assistant", "content": response})

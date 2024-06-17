@@ -15,7 +15,9 @@ def get_mongo_client(mongo_uri):
         print(f"Connection failed: {e}")
         return None
 
+
 client = get_mongo_client(mongo_uri)
+
 
 class VectorSearch:
     def __init__(self, db_name='Phone', collection_name='Phone_Type'):
@@ -112,8 +114,14 @@ class VectorSearch:
             query, self.collection, num_candidates, k)
 
         search_result = ""
+
         for result in db_information:
-            search_result += f"Phone: {result.get('Phone', 'N/A')}, Features: {result.get('Features', 'N/A')}, Description: {result.get('Description', 'N/A')}, specs: {result.get('specs', 'N/A')}, price: {result.get('price', 'N/A')}\n"
+            phone = result.get('Phone', 'N/A')
+            features = result.get('Features', 'N/A').replace('\n', ' ')
+            description = result.get('Description', 'N/A').replace('\n', ' ')
+            price = result.get('price', 'N/A')
+            search_result += f"Phone: {phone}, Features: {features}, Description: {description}, price: {price}\n"
+
         if not combine_query:
             return search_result
         else:
