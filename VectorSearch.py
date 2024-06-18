@@ -7,6 +7,7 @@ mongo_uri = "mongodb+srv://ktoan911:ci12ZbPRMJSNjRoB@cluster0.ogeezq3.mongodb.ne
 def get_mongo_client(mongo_uri):
     """Establish connection to the MongoDB."""
     try:
+        # Kết nối tới MongoDB sử dụng URI 
         client = pymongo.MongoClient(
             mongo_uri, appname="devrel.content.python")
         print("Connection to MongoDB successful")
@@ -39,7 +40,9 @@ class VectorSearch:
             return None
 
     def insert_document(self, df):
-        """Insert a document into the collection."""
+        """
+            Đưa dữ liệu từ DataFrame vào collection trong MongoDB.
+        """
         try:
             documents = df.to_dict("records")
             self.collection.insert_many(documents)
@@ -57,14 +60,14 @@ class VectorSearch:
 
     def vector_search(self, user_query, collection, num_candidates=100, k=2):
         """
-        Perform a vector search in the MongoDB collection based on the user query.
-
+        Lấy ra các vector gần nhất với vector của user_query từ collection.
         Args:
-        user_query (str): The user's query string.
-        collection (MongoCollection): The MongoDB collection to search.
-
+            user_query (str): Câu truy vấn của người dùng.
+            collection (pymongo.collection.Collection): Collection trong MongoDB.
+            num_candidates (int): Số lượng vector ứng viên.
+            k (int): Số lượng vector gần nhất cần lấy ra.
         Returns:
-        list: A list of matching documents.
+            list: Danh sách các vector gần nhất với vector của user_query.
         """
 
         # Generate embedding for the user query
@@ -73,48 +76,63 @@ class VectorSearch:
         if query_embedding is None:
             return "Invalid query or embedding generation failed."
 
-        # Define the vector search pipeline
+        # Định nghĩa các stage trong pipeline
         vector_search_stage = {
             "$vectorSearch": {
                 "index": "vector_index",
                 "queryVector": query_embedding,
                 "path": "embedding",
-                "numCandidates": num_candidates,  # Number of candidate matches to consider
-                "limit": k  # Return top 4 matches
+                "numCandidates": num_candidates,  # Số lượng vector ứng viên.
+                "limit": k  # Trả về k vector gần nhất.
             }
         }
 
         unset_stage = {
-            "$unset": "embedding"  # Exclude the 'embedding' field from the results
+            # Loại bỏ trường embedding khỏi kết quả trả về.
+            "$unset": "embedding"
         }
 
         project_stage = {
             "$project": {
-                "_id": 0,  # Exclude the _id field
-                "Phone": 1,  # Include the Phone field
-                "Features": 1,  # Include the Features field
-                "Description": 1,  # Include the Description field
-                'specs': 1,  # Include the specs field
-                'price': 1,
+                "_id": 0,  # Loại bỏ trường _id
+                "Phone": 1,  # Trả về trường Phone
+                "Features": 1,  # Trả về trường Features
+                "Description": 1,  # Trả về trường Description
+                'specs': 1,  # Trả về trường specs
+                'price': 1,  # Trả về trường price
                 "score": {
-                    "$meta": "vectorSearchScore"  # Include the search score
+                    # Trả về điểm số của các vector gần nhất.
+                    "$meta": "vectorSearchScore"
                 }
             }
         }
 
+        # Xây dựng pipeline
         pipeline = [vector_search_stage, unset_stage, project_stage]
 
-        # Execute the search
+        # Thực thi pipeline
         results = collection.aggregate(pipeline)
         return list(results)
 
     def get_search_result(self, query, num_candidates=100, k=2, combine_query=True):
+        '''
+        Lấy kết quả tìm kiếm từ vector search và trả về dưới dạng chuỗi.
+        Args:
+            query (str): Câu truy vấn của người dùng.
+            num_candidates (int): Số lượng vector ứng viên.
+            k (int): Số lượng vector gần nhất cần lấy ra.
+            combine_query (bool): Kết hợp câu truy vấn với kết quả tìm kiếm hay không.
+        Returns:
+            str: Kết quả tìm kiếm dưới dạng chuỗi.
+        '''
 
+        # Lấy vector database từ vector search
         db_information = self.vector_search(
             query, self.collection, num_candidates, k)
 
         search_result = ""
 
+        # Duyệt qua kết quả trả về từ vector search và thêm vào search_result
         for result in db_information:
             phone = result.get('Phone', 'N/A')
             features = result.get(

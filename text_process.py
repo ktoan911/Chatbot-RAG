@@ -6,6 +6,7 @@ nlp = spacy.load("en_core_web_sm")
 
 
 def process_query(query):
+    # Loại bỏ stop words và chuyển câu truy vấn về dạng lowercase
     doc = nlp(query.lower().strip())
 
     filtered_text = [token.text for token in doc if not token.is_stop]
@@ -16,11 +17,12 @@ def process_query(query):
     return result_query, True
 
 
+# Hàm lấy embedding của câu truy vấn
 def get_embedding(text: str) -> list[float]:
     if not text.strip():
         print("Attempted to get embedding for empty text.")
         return []
 
-    embedding = model.encode(text.replace('###','').replace('\n',''))
+    embedding = model.encode(text.replace('###', '').replace('\n', ''))
 
     return embedding.tolist()
