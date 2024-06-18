@@ -1,7 +1,7 @@
 import together_api
 import streamlit as st
 import VectorSearch
-from text_process import process_query
+from query_process import process_query, classification_query
 
 
 # Streamlit app title
@@ -29,9 +29,10 @@ if (st.session_state.messages[-1]['role'] == 'assistant'):
     for message in st.session_state.messages:
         if message["role"] == "user":
             with st.chat_message(message["role"]):
-                st.write(st.session_state.query_list[cnt])
+                # st.write(st.session_state.query_list[cnt])
+                st.write(message["content"])
                 cnt += 1
-        
+
         elif message["role"] != "system":
             with st.chat_message(message["role"]):
                 st.write(message["content"])
@@ -45,8 +46,9 @@ if prompt := st.chat_input("Can I help you with anything?"):
         st.markdown(prompt)
 
     # vector search db
+    need_db = classification_query(prompt, llm)
     clean_query, get_infor = process_query(prompt)
-    if (get_infor):
+    if get_infor and need_db:
         clean_query = vector_search.get_search_result(clean_query)
     st.session_state.messages.append(
         {"role": "user", "content": clean_query})

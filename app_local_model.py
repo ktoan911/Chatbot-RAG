@@ -1,5 +1,5 @@
 import streamlit as st
-from text_process import process_query
+from query_process import process_query
 import model
 import VectorSearch
 import torch

@@ -1,5 +1,5 @@
 import pymongo
-from text_process import get_embedding
+from query_process import get_embedding
 
 mongo_uri = "mongodb+srv://ktoan911:ci12ZbPRMJSNjRoB@cluster0.ogeezq3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
