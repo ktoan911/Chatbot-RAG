@@ -5,7 +5,7 @@ from query_process import process_query, classification_query
 
 
 # Streamlit app title
-st.set_page_config(page_title="Phone Chatbot", page_icon=":robot:")
+st.set_page_config(page_title="Phone Chatbot", page_icon=":iphone:")
 st.title("Phone Sales Assistant Chatbot")
 
 # Khởi tạo vector search
@@ -16,7 +16,7 @@ llm = together_api.TogetherLLM()
 # Tạo bộ nhớ seesion statecho lịch sử chat và query
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "system", "content": "You are a phone sales representative in a mobile phone store. Your task is to help customers find the best phone that suits their needs."}
+        {"role": "system", "content": "You are a phone sales representative in Hedspi mobile phone store. Your task is to help customers find the best phone that suits their needs."}
     ]
 # Initialize raw querry in session state
 if 'query_list' not in st.session_state:
@@ -29,8 +29,8 @@ if (st.session_state.messages[-1]['role'] == 'assistant'):
     for message in st.session_state.messages:
         if message["role"] == "user":
             with st.chat_message(message["role"]):
-                # st.write(st.session_state.query_list[cnt])
-                st.write(message["content"])
+                st.write(st.session_state.query_list[cnt])
+                # st.write(message["content"])
                 cnt += 1
 
         elif message["role"] != "system":
@@ -55,8 +55,13 @@ if prompt := st.chat_input("Can I help you with anything?"):
 
     # Generate assistant's response
     with st.chat_message("assistant"):
-        with st.spinner("Checking the warehouse..."):
-            response = llm.call(st.session_state.messages)
-            st.markdown(response)
+        placeholder = st.empty()
+        stream = llm.call(st.session_state.messages)
+        response = ""
+        for part in stream:
+            ans_next = part.choices[0].delta.content
+            if ans_next != None:
+                response += ans_next
+                placeholder.write(response)
     st.session_state.messages.append(
         {"role": "assistant", "content": response})

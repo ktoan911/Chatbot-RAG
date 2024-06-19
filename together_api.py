@@ -18,6 +18,7 @@ class TogetherLLM:
     def call(
         self,
         messages: list,
+        stream=True
     ):
         """Call to Together."""
         output = completion(
@@ -25,7 +26,11 @@ class TogetherLLM:
             model=self.model,
             together_api_key=self.together_api_key,
             temperature=self.temperature,
-            max_tokens=self.max_tokens
+            max_tokens=self.max_tokens,
+            stream=stream
         )
-        text = output['choices'][0]['message']['content']
-        return text
+
+        if stream:
+            return output
+        else:
+            return output['choices'][0]['message']['content']

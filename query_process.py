@@ -40,7 +40,7 @@ def classification_query(query, llm):
                 {"role": "user", "content": "what is your name."},
                 {"role": "assistant", "content": '0'},
                 {"role": "user", "content": "Do you think I should buy an iPhone or an Android phone?"},
-                {"role": "assistant", "content": "0"},
+                {"role": "assistant", "content": "1"},
                 {"role": "user", "content": "I want to know information about Samsung F13."},
                 {"role": "assistant", "content": "1"},
                 {"role": "user", "content": "More"},
