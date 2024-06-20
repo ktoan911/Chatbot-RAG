@@ -1,5 +1,5 @@
 import spacy
-from spacy.cli
+import spacy.cli
 from sentence_transformers import SentenceTransformer
 import os
 from dotenv import load_dotenv
