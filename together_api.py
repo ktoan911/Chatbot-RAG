@@ -1,7 +1,7 @@
 import os
 from litellm import completion
 
-os.environ["TOGETHER_API_KEY"] = "22c9252460f6056c47ca857f02593e552a2da989b625c29da8bc54022a404af6"
+os.environ["TOGETHER_API_KEY"] = ""
 
 
 class TogetherLLM:

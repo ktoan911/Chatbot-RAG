@@ -1,6 +1,6 @@
 import spacy
 from sentence_transformers import SentenceTransformer
-
+import together_api
 
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 nlp = spacy.load("en_core_web_sm")
@@ -30,7 +30,7 @@ def get_embedding(text: str) -> list[float]:
 
 
 def classification_query(query, llm):
-    messages = [{'role': 'system', 'content': 'You are a question categorizer, if the answer to that question requires information about your store products then answer "1", but if it is just common questions in life then answer "0".'},
+    messages = [{'role': 'system', 'content': 'You are a question categorizer, if the question is related to information about your store products then answer "1", else answer "0".'},
                 {"role": "user", "content": "I want to buy a phone with a good camera."},
                 {"role": "assistant", "content": "1"},
                 {"role": "user", "content": "I want to buy a phone with a good camera and long battery life."},
@@ -45,16 +45,20 @@ def classification_query(query, llm):
                 {"role": "assistant", "content": "1"},
                 {"role": "user", "content": "More"},
                 {"role": "assistant", "content": "1"},
+                {"role": "user", "content": "Stop"},
+                {"role": "assistant", "content": "0"},
+                {"role": "user", "content": "bye"},
+                {"role": "assistant", "content": "0"},
                 {"role": "user", "content": "What is the newest phone in the world right now."},
                 {"role": "assistant", "content": "0"},
                 {'role': 'user', 'content': query}
                 ]
-    response = llm.call(messages)
+    response = llm.call(messages, stream=False)
     if (response == "0"):
         return False  # không cần truy xuất thông tin database
     else:
         return True  # cần truy xuất thông tin database
 
 
-# print(classification_query("How are you?",
+# print(classification_query("stop",
 #       llm=together_api.TogetherLLM()))
