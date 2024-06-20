@@ -1,4 +1,5 @@
 import spacy
+from spacy.cli import download
 from sentence_transformers import SentenceTransformer
 import os
 from dotenv import load_dotenv
@@ -6,8 +7,22 @@ from dotenv import load_dotenv
 # Load the environment variables from the .env file
 load_dotenv()
 
+
+def load_spacy_model(model_name):
+    try:
+        nlp = spacy.load(model_name)
+    except OSError:
+        print(f"Model '{model_name}' not found. Downloading...")
+        download(model_name)
+        nlp = spacy.load(model_name)
+    return nlp
+
+
+# Sử dụng hàm để tải và load gói ngôn ngữ
+nlp = load_spacy_model("en_core_web_sm")
+
 model = SentenceTransformer(os.environ['EMBEDDING_MODEL'])
-nlp = spacy.load("en_core_web_sm")
+nlp = load_spacy_model("en_core_web_sm")
 
 
 def process_query(query):
