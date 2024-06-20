@@ -1,4 +1,4 @@
-# Phone Saler Chatbot
+# Phone Sale Assistant Chatbot
 
 - Github: [ktoan911](https://github.com/ktoan911) 
 - Email: khanhtoan.forwork@gmail.com 
@@ -65,7 +65,12 @@ For this project, we use data following the format below:
 ```
 "Query: {prompt_query} "Answer with information below:" \n {search_result}."
 ```
-## IV. 
+## IV. Demo and Appplication
+
+This is demo of Phone Sale Assistant Chatbot:
+
+You can try out the features of this chatbot [here](https://chatbot-phone-sale-assistant.streamlit.app/)  
+Try talking to it like a customer and see how it will help you!
 
 
 
