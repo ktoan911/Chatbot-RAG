@@ -1,33 +1,26 @@
-import spacy
-import spacy.cli
-from sentence_transformers import SentenceTransformer
-import os
 from dotenv import load_dotenv
+import os
+from sentence_transformers import SentenceTransformer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
 
 # Load the environment variables from the .env file
 load_dotenv()
 
 
-def load_spacy_model(model_name):
-    try:
-        nlp = spacy.load(model_name)
-    except OSError:
-        print(f"Model '{model_name}' not found. Downloading...")
-        spacy.cli.download(model_name)
-        nlp = spacy.load(model_name)
-    return nlp
-
-
 # Sử dụng hàm để tải và load gói ngôn ngữ
-nlp = load_spacy_model("en_core_web_sm")
+stop_words = set(stopwords.words('english'))
 model = SentenceTransformer(os.environ['EMBEDDING_MODEL'])
 
 
 def process_query(query):
     # Loại bỏ stop words và chuyển câu truy vấn về dạng lowercase
-    doc = nlp(query.lower().strip())
+    word_tokens = word_tokenize(query.lower().strip())
 
-    filtered_text = [token.text for token in doc if not token.is_stop]
+    filtered_text = [word for word in word_tokens if not word in stop_words]
 
     result_query = " ".join(filtered_text)
     if len(result_query.replace(' ', '')) == 0:
