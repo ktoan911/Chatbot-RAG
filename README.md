@@ -5,36 +5,70 @@
 
 
 
-Chatbot hỗ trợ tiếp thị điện thoại sử dụng kiến trúc RAG (Retrieval Augumented Generation) 
+This chatbot supports phone marketing using the RAG (Retrieval Augmented Generation) architecture. The architecture creates a more powerful model by providing additional information from database retrieval to the model.
 
 
 
-## Hình ảnh kiến krúc mô hình
+## Model Architecture Image
 
 ![image](Assets/Architecture.jpg)
 
-## I. Thiết Lập Môi Trường
-- Bước 1: Tạo môi trường Conda tên là your_env_name với phiên bản Python 3.11.3
+## I. Setting Up the Environment
+#### Step 1: Create a Conda environment named your_env_name with Python 3.11.3
 
 ```python
 conda create -n ${your_env_name} python= 3.11.3
 ```
 
-- Bước 2: Kích hoạt môi trường vừa tạo bằng lệnh sau:
+#### Step 2: Activate the newly created environment with the following command:
 ```
 conda activate ${your_env_name}
 ```
 
-- Bước 3: Cài đặt các gói từ file requirements.txt
+#### Step 3: Install the packages from the requirements.txt file
 
 ```
 pip install -r requirements.txt
 ``` 
-## IV. Demo
+#### Step 4: Install the en_core_web_sm package from the spacy library
 
-![image](Assets/Demo.png)
+```
+python -m spacy download en_core_web_sm
+```
 
-In this case, the query speed is 227ms.
+#### Step 5: Create a .env file and add the following lines, replacing the placeholders with your actual values:
+```
+TOGETHER_API_KEY = ""
+MONGO_URI = ""
+EMBEDDING_MODEL = ""
+```
+
+- TOGETHER_API_KEY: Your key to access the [together.ai API](https://www.together.ai/). 
+- MONGO_URI : URI of your MongoDB Atlas instance.
+- EMBEDDING_MODEL: Name of the embedding model you're using for text embedding.
+
+## II. Data
+
+For this project, we use data following the format below:
+![image](Assets/Data.png)
+
+- The data set we use includes 207 phone models containing price information and detailed phone descriptions.
+- We are using MongoDB Atlas for Vector Search. You can learn how it works and how to do it [here](https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/#atlas-vector-search-queries)
+
+## III. Features
+
+- We added the feature to identify questions about whether it is necessary to extract information from the database. This is to save time generating answers and system resources, and at the same time prevent the pattern of rambling answers that are not on point.
+![image](Assets/LLM_Classification.jpg)
+
+- We combine the user's query and the information exported from the database according to the following syntax:
+
+```
+"Query: {prompt_query} "Answer with information below:" \n {search_result}."
+```
+## IV. 
+
+
+
 
 
 

@@ -1,8 +1,12 @@
 import spacy
 from sentence_transformers import SentenceTransformer
-import together_api
+import os
+from dotenv import load_dotenv
 
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+# Load the environment variables from the .env file
+load_dotenv()
+
+model = SentenceTransformer(os.environ['EMBEDDING_MODEL'])
 nlp = spacy.load("en_core_web_sm")
 
 

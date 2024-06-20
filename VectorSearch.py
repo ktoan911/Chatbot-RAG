@@ -1,13 +1,16 @@
 import pymongo
+import os
 from query_process import get_embedding
+from dotenv import load_dotenv
 
-mongo_uri = "mongodb+srv://ktoan911:ci12ZbPRMJSNjRoB@cluster0.ogeezq3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+# Load the environment variables from the .env file
+load_dotenv()
 
 
 def get_mongo_client(mongo_uri):
     """Establish connection to the MongoDB."""
     try:
-        # Kết nối tới MongoDB sử dụng URI 
+        # Kết nối tới MongoDB sử dụng URI
         client = pymongo.MongoClient(
             mongo_uri, appname="devrel.content.python")
         print("Connection to MongoDB successful")
@@ -17,27 +20,16 @@ def get_mongo_client(mongo_uri):
         return None
 
 
-client = get_mongo_client(mongo_uri)
+client = get_mongo_client(os.environ["MONGO_URI"])
 
 
 class VectorSearch:
     def __init__(self, db_name='Phone', collection_name='Phone_Type'):
-        if not mongo_uri:
+        if not os.environ["MONGO_URI"]:
             raise ValueError("MongoDB URI is missing")
         self.client = client
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
-
-    def get_mongo_client(self, mongo_uri):
-        """Establish connection to the MongoDB."""
-        try:
-            client = pymongo.MongoClient(
-                mongo_uri, appname="devrel.content.python")
-            print("Connection to MongoDB successful")
-            return client
-        except pymongo.errors.ConnectionFailure as e:
-            print(f"Connection failed: {e}")
-            return None
 
     def insert_document(self, df):
         """

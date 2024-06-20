@@ -1,7 +1,9 @@
 import os
 from litellm import completion
+from dotenv import load_dotenv
 
-os.environ["TOGETHER_API_KEY"] = ""
+# Load the environment variables from the .env file
+load_dotenv()
 
 
 class TogetherLLM:
