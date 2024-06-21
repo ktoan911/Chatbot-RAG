@@ -23,6 +23,15 @@ if 'query_list' not in st.session_state:
     st.session_state.query_list = []
 
 
+# reset cuộc trò chuyện
+if st.button("Reset Conversation"):
+    st.session_state.messages = [
+        {"role": "system", "content": "You are a phone sales representative in Hedspi mobile phone store. Your task is to help customers find the best phone that suits their needs."}
+    ]
+    st.session_state.query_list = []
+    st.experimental_rerun()  # chạy lại chatbot
+
+
 # In lịch sử chat
 if (st.session_state.messages[-1]['role'] == 'assistant'):
     cnt = 0

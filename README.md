@@ -61,7 +61,8 @@ For this project, we use data following the format below:
 "Query: {prompt_query} "Answer with information below:" \n {search_result}."
 ```
 
-- Chatbot has the ability to save context during the conversation to help avoid answering the wrong topic
+- Chatbot has the ability to save context during the conversation to help avoid answering the wrong topic. You can delete the chat history and create a new chat with the chatbot via the button `Reset Conversation`.
+
 ## IV. Demo and Appplication
 
 This is demo of Phone Sale Assistant Chatbot:
