@@ -156,5 +156,6 @@ class VectorSearch:
         if not combine_query:
             return search_result
         else:
-            prompt_query = query + ". " + "Cửa hàng có những sản phẩm sau:"
+            prompt_query = query + ". " + \
+                "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau (Nếu không có thông tin thì do hết hàng):"
             return f"Query: {prompt_query} \n {search_result}.".replace('<br>', '')
