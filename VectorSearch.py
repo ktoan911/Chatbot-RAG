@@ -24,7 +24,7 @@ client = get_mongo_client(os.environ["MONGO_URI"])
 
 
 class VectorSearch:
-    def __init__(self, db_name='Phone', collection_name='Phone_Type'):
+    def __init__(self, db_name='Phone', collection_name='Phone_ViType'):
         if not os.environ["MONGO_URI"]:
             raise ValueError("MongoDB URI is missing")
         self.client = client
@@ -86,15 +86,15 @@ class VectorSearch:
 
         project_stage = {
             "$project": {
-                "_id": 0,  # Loại bỏ trường _id
-                "Phone": 1,  # Trả về trường Phone
-                "Features": 1,  # Trả về trường Features
-                "Description": 1,  # Trả về trường Description
-                'specs': 1,  # Trả về trường specs
-                'price': 1,  # Trả về trường price
+                "_id": 0,  # Exclude the _id field
+                "url": 1,  # Include the Phone url
+                "title": 1,  # Include the Phone field
+                "product_promotion": 1,  # Include the Description field
+                'product_specs': 1,  # Include the specs field
+                'current_price': 1,
+                'color_options': 1,
                 "score": {
-                    # Trả về điểm số của các vector gần nhất.
-                    "$meta": "vectorSearchScore"
+                    "$meta": "vectorSearchScore"  # Include the search score
                 }
             }
         }
@@ -106,7 +106,7 @@ class VectorSearch:
         results = collection.aggregate(pipeline)
         return list(results)
 
-    def get_search_result(self, query, num_candidates=100, k=2, combine_query=True):
+    def get_search_result(self, query, num_candidates=100, k=4, combine_query=True):
         '''
         Lấy kết quả tìm kiếm từ vector search và trả về dưới dạng chuỗi.
         Args:
@@ -118,6 +118,13 @@ class VectorSearch:
             str: Kết quả tìm kiếm dưới dạng chuỗi.
         '''
 
+        def get_infomation(text, prompt):
+            text = text.replace('\n', '.')
+            if text:
+                return f"{prompt} {text}.\n"
+            else:
+                return ""
+
         # Lấy vector database từ vector search
         db_information = self.vector_search(
             query, self.collection, num_candidates, k)
@@ -125,16 +132,29 @@ class VectorSearch:
         search_result = ""
 
         # Duyệt qua kết quả trả về từ vector search và thêm vào search_result
-        for result in db_information:
-            phone = result.get('Phone', 'N/A')
-            features = result.get(
-                'Features', 'N/A').replace('\n', ' ').replace('|', ',').replace('\t', ' ')
-            description = result.get('Description', 'N/A').replace('\n', ' ')
-            price = result.get('price', 'N/A')
-            search_result += f"Phone: {phone},Description: {description}, Features: {features}, Price: {price} VND\n"
+        for i, result in enumerate(db_information):
+            url = result.get('url', 'N/A')
+            title = result.get('title', 'N/A')
+            product_promotion = result.get('product_promotion', 'N/A')
+            product_specs = result.get('product_specs', 'N/A')
+            current_price = result.get('current_price', 'N/A') if result.get(
+                'current_price', 'N/A') else 'Liên hệ để trao đổi thêm'
+            color_options = ", ".join(result.get('color_options', 'N/A'))
+
+            search_result += f"Sản phẩm thứ {i+1}: \n"
+
+            search_result += get_infomation(url, "Link sản phẩm:")
+            search_result += get_infomation(title, "Tên sản phẩm:")
+            search_result += get_infomation(product_promotion,
+                                            "Ưu đãi:")
+            search_result += get_infomation(product_specs,
+                                            "Chi tiết sản phẩm:")
+            search_result += get_infomation(current_price, "Giá tiền:")
+            search_result += get_infomation(color_options,
+                                            "Các màu điện thoại:")
 
         if not combine_query:
             return search_result
         else:
-            prompt_query = query + ". " + "Answer with information below:"
-            return f"Query: {prompt_query} \n {search_result}."
+            prompt_query = query + ". " + "Cửa hàng có những sản phẩm sau:"
+            return f"Query: {prompt_query} \n {search_result}.".replace('<br>', '')

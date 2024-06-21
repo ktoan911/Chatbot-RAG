@@ -1,7 +1,7 @@
 import together_api
 import streamlit as st
 import VectorSearch
-from query_process import process_query, classification_query
+from query_process import classification_query, process_query
 import os
 from dotenv import load_dotenv
 
@@ -20,26 +20,28 @@ llm = together_api.TogetherLLM()
 # Tạo bộ nhớ seesion statecho lịch sử chat và query
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "system", "content": "You are a phone sales representative in Hedspi mobile phone store. Your task is to help customers find the best phone that suits their needs."}
+        {"role": "system", "content": "Bạn là một nhân viên bán hàng điện thoại trong cửa hàng điện thoại di động Hedspi. Nhiệm vụ của bạn là giúp khách hàng tìm chiếc điện thoại tốt nhất phù hợp với nhu cầu của họ."}
     ]
+
 # Initialize raw querry in session state
 if 'query_list' not in st.session_state:
     st.session_state.query_list = []
 
 
-col1, col2 = st.columns([2.5, 7.5])  # chia tỉ lệ  2 cột 25% và 75%
+col1, col2 = st.columns([3, 7])  # chia tỉ lệ  2 cột 25% và 75%
 with col1:
-    if st.button("Reset Conversation"):
+    if st.button("Làm mới cuộc trò chuyện"):
         st.session_state.messages = [
-            {"role": "system", "content": "You are a phone sales representative in Hedspi mobile phone store. Your task is to help customers find the best phone that suits their needs."}
+            {"role": "system", "content": "Bạn là một nhân viên bán hàng điện thoại trong cửa hàng điện thoại di động Hedspi. Nhiệm vụ của bạn là giúp khách hàng tìm chiếc điện thoại tốt nhất phù hợp với nhu cầu của họ."}
         ]
+
         st.session_state.query_list = []
         st.experimental_rerun()  # chạy lại chatbot
 
 with col2:
-    if st.button("Visit Website"):
+    if st.button("Đến website bán hàng"):
         website_url = os.environ.get('WEBSITE', 'https://www.example.com')
-        st.write(f'<a href={website_url} target="_blank">Click here to visit Hedspi Store website</a>',
+        st.write(f'<a href={website_url} target="_blank">Bấm vào để quay lại cửa hàng</a>',
                  unsafe_allow_html=True)
 
 
@@ -59,7 +61,7 @@ if (st.session_state.messages[-1]['role'] == 'assistant'):
 
 
 # Khi đầu vào từ người dùng
-if prompt := st.chat_input("Can I help you with anything?"):
+if prompt := st.chat_input("Bạn cần chúng tôi hỗ trợ gì?"):
     # Hiển thị query
     with st.chat_message("user"):
         st.session_state.query_list.append(prompt)

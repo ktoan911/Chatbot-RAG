@@ -42,7 +42,7 @@ WEBSITE =
 - TOGETHER_API_KEY: Your key to access the [together.ai API](https://www.together.ai/). 
 - MONGO_URI: URI of your MongoDB Atlas instance.
 - EMBEDDING_MODEL: Name of the embedding model you're using for text embedding.
-- WEBSITE: Link store's website
+- WEBSITE: Link store's website.
 
 ## II. Data
 
@@ -50,7 +50,7 @@ For this project, we use data following the format below:
 ![image](Assets/Data.png)
 
 - The data set we use includes 207 phone models containing price information and detailed phone descriptions.
-- We are using MongoDB Atlas for Vector Search. You can learn how it works and how to do it [here](https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/#atlas-vector-search-queries)
+- We are using MongoDB Atlas for Vector Search. You can learn how it works and how to do it [here](https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/#atlas-vector-search-queries).
 
 ## III. Features
 
@@ -65,13 +65,15 @@ For this project, we use data following the format below:
 
 - Chatbot has the ability to save context during the conversation to help avoid answering the wrong topic. You can delete the chat history and create a new chat with the chatbot via the button `Reset Conversation`.
 
+- After being consulted, customers can also press the button `Visit Website` to return to the store's website to continue purchasing.
+
 ## IV. Demo and Appplication
 
 This is demo of Phone Sale Assistant Chatbot:
 
 ![](Assets/VideoDemo.gif)  
 
-You can try out the features of this chatbot [here](https://chatbot-phone-sale-assistant.streamlit.app/)  
+You can try out the features of this chatbot [here](https://chatbot-phone-sale-assistant.streamlit.app/).\
 Try talking to it like a customer and see how it will help you!
 
 
