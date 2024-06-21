@@ -49,7 +49,7 @@ WEBSITE =
 For this project, we use data following the format below:
 ![image](Assets/Data.png)
 
-- The data set we use includes 207 phone models containing price information and detailed phone descriptions.
+- The data set we use includes 320 phone models containing price information and detailed phone descriptions.
 - We are using MongoDB Atlas for Vector Search. You can learn how it works and how to do it [here](https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/#atlas-vector-search-queries).
 
 ## III. Features
@@ -60,12 +60,12 @@ For this project, we use data following the format below:
 - We combine the user's query and the information exported from the database according to the following syntax:
 
 ```
-"Query: {prompt_query} "Answer with information below:" \n {search_result}."
+"Query: {prompt_query} "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau (Nếu không có thông tin thì hãy đề xuất sản phẩm khác):" \n {search_result}."
 ```
 
-- Chatbot has the ability to save context during the conversation to help avoid answering the wrong topic. You can delete the chat history and create a new chat with the chatbot via the button `Reset Conversation`.
+- Chatbot has the ability to save context during the conversation to help avoid answering the wrong topic. You can delete the chat history and create a new chat with the chatbot via the button `Làm mới cuộc trò chuyện`.
 
-- After being consulted, customers can also press the button `Visit Website` to return to the store's website to continue purchasing.
+- After being consulted, customers can also press the button `Đến Website bán hàng` to return to the store's website to continue purchasing.
 
 ## IV. Demo and Appplication
 

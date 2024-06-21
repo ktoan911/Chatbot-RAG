@@ -157,5 +157,5 @@ class VectorSearch:
             return search_result
         else:
             prompt_query = query + ". " + \
-                "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau (Nếu không có thông tin thì do hết hàng):"
+                "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau (Nếu không có thông tin thì hãy đề xuất sản phẩm khác):"
             return f"Query: {prompt_query} \n {search_result}.".replace('<br>', '')
