@@ -30,17 +30,12 @@ conda activate ${your_env_name}
 ```
 pip install -r requirements.txt
 ``` 
-#### Step 4: Install the en_core_web_sm package from the spacy library
 
+#### Step 4: Create a .env file and add the following lines, replacing the placeholders with your actual values:
 ```
-python -m spacy download en_core_web_sm
-```
-
-#### Step 5: Create a .env file and add the following lines, replacing the placeholders with your actual values:
-```
-TOGETHER_API_KEY = ""
-MONGO_URI = ""
-EMBEDDING_MODEL = ""
+TOGETHER_API_KEY = 
+MONGO_URI = 
+EMBEDDING_MODEL = 
 ```
 
 - TOGETHER_API_KEY: Your key to access the [together.ai API](https://www.together.ai/). 
@@ -65,6 +60,8 @@ For this project, we use data following the format below:
 ```
 "Query: {prompt_query} "Answer with information below:" \n {search_result}."
 ```
+
+- Chatbot has the ability to save context during the conversation to help avoid answering the wrong topic
 ## IV. Demo and Appplication
 
 This is demo of Phone Sale Assistant Chatbot:
