@@ -2,6 +2,10 @@ import together_api
 import streamlit as st
 import VectorSearch
 from query_process import process_query, classification_query
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # Streamlit app title
@@ -23,13 +27,20 @@ if 'query_list' not in st.session_state:
     st.session_state.query_list = []
 
 
-# reset cuộc trò chuyện
-if st.button("Reset Conversation"):
-    st.session_state.messages = [
-        {"role": "system", "content": "You are a phone sales representative in Hedspi mobile phone store. Your task is to help customers find the best phone that suits their needs."}
-    ]
-    st.session_state.query_list = []
-    st.experimental_rerun()  # chạy lại chatbot
+col1, col2 = st.columns([2.5, 7.5])  # chia tỉ lệ  2 cột 25% và 75%
+with col1:
+    if st.button("Reset Conversation"):
+        st.session_state.messages = [
+            {"role": "system", "content": "You are a phone sales representative in Hedspi mobile phone store. Your task is to help customers find the best phone that suits their needs."}
+        ]
+        st.session_state.query_list = []
+        st.experimental_rerun()  # chạy lại chatbot
+
+with col2:
+    if st.button("Visit Website"):
+        website_url = os.environ.get('WEBSITE', 'https://www.example.com')
+        st.write(f'<a href={website_url} target="_blank">Click here to visit Hedspi Store website</a>',
+                 unsafe_allow_html=True)
 
 
 # In lịch sử chat

@@ -36,11 +36,13 @@ pip install -r requirements.txt
 TOGETHER_API_KEY = 
 MONGO_URI = 
 EMBEDDING_MODEL = 
+WEBSITE = 
 ```
 
 - TOGETHER_API_KEY: Your key to access the [together.ai API](https://www.together.ai/). 
-- MONGO_URI : URI of your MongoDB Atlas instance.
+- MONGO_URI: URI of your MongoDB Atlas instance.
 - EMBEDDING_MODEL: Name of the embedding model you're using for text embedding.
+- WEBSITE: Link store's website
 
 ## II. Data
 
