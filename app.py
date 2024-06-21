@@ -10,7 +10,7 @@ load_dotenv()
 
 # Streamlit app title
 st.set_page_config(page_title="Hedspi Phone Store", page_icon=":iphone:")
-st.title("Trợ lí ảo hỏi đáp về điện thoại di động")
+st.title("Hedspi Phone Store Chatbot")
 
 # Khởi tạo vector search
 vector_search = VectorSearch.VectorSearch()
