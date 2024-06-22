@@ -23,8 +23,8 @@ def get_mongo_client(mongo_uri):
 client = get_mongo_client(os.environ["MONGO_URI"])
 
 
-class VectorSearch:
-    def __init__(self, db_name='Phone', collection_name='Phone_ViType'):
+class RAG:
+    def __init__(self, db_name=os.environ["DB_NAME"], collection_name=os.environ["COLLECTION_NAME"]):
         if not os.environ["MONGO_URI"]:
             raise ValueError("MongoDB URI is missing")
         self.client = client

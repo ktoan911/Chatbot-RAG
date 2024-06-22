@@ -1,6 +1,6 @@
 import together_api
 import streamlit as st
-import VectorSearch
+import RAG
 from query_process import classification_query, process_query
 import os
 from dotenv import load_dotenv
@@ -13,7 +13,7 @@ st.set_page_config(page_title="Hedspi Phone Store", page_icon=":iphone:")
 st.title("Hedspi Phone Store Chatbot")
 
 # Khởi tạo vector search
-vector_search = VectorSearch.VectorSearch()
+vector_search = RAG.RAG()
 llm = together_api.TogetherLLM()
 
 
