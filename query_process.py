@@ -1,19 +1,18 @@
 from dotenv import load_dotenv
 import os
 from sentence_transformers import SentenceTransformer
-# from nltk.tokenize import word_tokenize
-# from nltk.corpus import stopwords
-# import nltk
-# nltk.download('stopwords')
-# nltk.download('punkt')
+from sematic_router import ChitchatProdcutsSentimentRoute, SemanticRouter
 
 # Load the environment variables from the .env file
 load_dotenv()
 
-
-# Sử dụng hàm để tải và load gói ngôn ngữ
-# stop_words = set(stopwords.words('english'))
+#load the embedding model
 embedding_model = SentenceTransformer(os.environ['EMBEDDING_MODEL'])
+
+chitchat_prodcuts_sentiment_route = ChitchatProdcutsSentimentRoute()
+senmatic_router = SemanticRouter(embedding_model)
+
+embedding_routes = chitchat_prodcuts_sentiment_route.get_json_routesEmbedding(path = r'routesEmbedding.json')
 
 
 def process_query(query):
@@ -22,7 +21,7 @@ def process_query(query):
     filtered_words = [word for word in words if word not in stopwords]
     clean_query = ' '.join(filtered_words)
     if len(clean_query.replace(' ', '')) == 0:
-        return query, False
+        return query, False # is empty query
     return clean_query, True
 
 
@@ -38,41 +37,18 @@ def get_embedding(text: str) -> list[float]:
     return embedding.tolist()
 
 
-def classification_query(query, llm):
-
-    messages = [{'role': 'system', 'content': 'Bạn là một người phân loại câu hỏi, nếu câu hỏi liên quan đến thông tin về sản phẩm của cửa hàng bạn thì trả lời "1", ngược lại thì trả lời "0".'},
-                {"role": "user", "content": "Tôi muốn mua một chiếc điện thoại có camera tốt."},
-                {"role": "assistant", "content": "1"},
-                {"role": "user", "content": "Tôi muốn mua một chiếc điện thoại có camera tốt và pin lâu."},
-                {"role": "assistant", "content": "1"},
-                {"role": "user", "content": "Tôi muốn mua chiếc điện thoại mới nhất, nhưng tôi không muốn chi quá nhiều tiền."},
-                {"role": "assistant", "content": "1"},
-                {"role": "user", "content": "Tên của bạn là gì."},
-                {"role": "assistant", "content": '0'},
-                {"role": "user", "content": "Bạn nghĩ tôi nên mua iPhone hay điện thoại Android?"},
-                {"role": "assistant", "content": "1"},
-                {"role": "user", "content": "Tôi muốn biết thông tin về Samsung F13."},
-                {"role": "assistant", "content": "1"},
-                {"role": "user", "content": "Thêm nữa"},
-                {"role": "assistant", "content": "1"},
-                {"role": "user", "content": "Dừng lại"},
-                {"role": "assistant", "content": "0"},
-                {"role": "user", "content": "tạm biệt"},
-                {"role": "assistant", "content": "0"},
-                {"role": "user", "content": "Điện thoại mới nhất trên thế giới hiện nay là gì."},
-                {"role": "assistant", "content": "0"},
-                {'role': 'user', 'content': query}
-                ]
-
-    response = llm.call(messages, stream=False)
-    if (response == "0"):
-        return False  # không cần truy xuất thông tin database
-    else:
-        return True  # cần truy xuất thông tin database
+def classification_query(queries):
+    for query in queries:
+        score, intent = senmatic_router.guide(
+            query, embedding_routes)
+    if intent == 'products':
+        return True
+    else :
+        return False
 
 
-# print(classification_query("stop",
-#       llm=together_api.TogetherLLM()))
+
+
 stopwords = [
     "a lô", "a ha", "ai", "ai ai", "ai nấy", "ai đó", "alô", "amen", "anh", "anh ấy", "ba", "ba ba",
     "ba bản", "ba cùng", "ba họ", "ba ngày", "ba ngôi", "ba tăng", "bao giờ", "bao lâu", "bao nhiêu",

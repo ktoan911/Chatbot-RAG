@@ -77,9 +77,6 @@ This is demo of Phone Sale Assistant Chatbot:
 
 ![](Assets/VideoDemo.gif)  
 
-You can try out the features of this chatbot [here](https://chatbot-phone-sale-assistant.streamlit.app/).\
-Try talking to it like a customer and see how it will help you!
-
 
 
 

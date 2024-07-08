@@ -14,7 +14,7 @@ st.title("Hedspi Phone Store Chatbot")
 
 # Khởi tạo vector search
 vector_search = RAG.RAG()
-llm = together_api.TogetherLLM()
+llm = together_api.TogetherLLM(os.environ["EMBEDDING_MODEL"])
 
 
 # Tạo bộ nhớ seesion statecho lịch sử chat và query
@@ -68,9 +68,9 @@ if prompt := st.chat_input("Bạn cần chúng tôi hỗ trợ gì?"):
         st.markdown(prompt)
 
     # vector search db
-    need_db = classification_query(prompt, llm)
-    clean_query, get_infor = process_query(prompt)
-    if get_infor and need_db:
+    is_needRAG = classification_query([prompt])
+    clean_query, is_empty = process_query(prompt)
+    if is_empty and is_needRAG:
         clean_query = vector_search.get_search_result(clean_query)
     st.session_state.messages.append(
         {"role": "user", "content": clean_query})
