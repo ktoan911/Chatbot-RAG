@@ -1,7 +1,7 @@
 import together_api
 import streamlit as st
 import RAG
-from query_process import classification_query, process_query
+from query_process import classification_query, process_query, extension_query
 import os
 from dotenv import load_dotenv
 
@@ -69,11 +69,18 @@ if prompt := st.chat_input("Bạn cần chúng tôi hỗ trợ gì?"):
 
     # vector search db
     is_needRAG = classification_query([prompt])
-    clean_query, is_empty = process_query(prompt)
-    if is_empty and is_needRAG:
-        clean_query = vector_search.get_search_result(clean_query)
+    if is_needRAG:
+        historyChat = st.session_state.messages + \
+            [{"role": "user", "content": process_query(prompt)}]
+        reflected_query = extension_query(llm, historyChat)
+        clean_query = vector_search.get_search_result(reflected_query)
+    else:
+        clean_query = process_query(prompt)
+
     st.session_state.messages.append(
         {"role": "user", "content": clean_query})
+
+    print(st.session_state.messages)
 
     # Generate assistant's response
     with st.chat_message("assistant"):
