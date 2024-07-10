@@ -16,21 +16,44 @@ class TogetherLLM:
         self.together_api_key = together_api_key
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.MAX_INPUT_LENGTH = os.environ["MAX_INPUT_TOKEN"]
+
+    # def get_input_length(self, messages: list) -> int:
+    #     """Calculate the total length of input message contents."""
+    #     return sum(len(message['content']) for message in messages if 'content' in message)
 
     def call(
         self,
         messages: list,
         stream=True
     ):
+        # input_length = self.get_input_length(messages)
+        # while input_length > int(self.MAX_INPUT_LENGTH):
+        #     if len(messages) > 3:
+        #         messages = messages[:1] + messages[3:]
+        #     else:
+        #         raise ValueError(
+        #             f"Input exceeds maximum length of {self.MAX_INPUT_LENGTH} tokens.")
         """Call to Together."""
-        output = completion(
-            messages=messages,
-            model=self.model,
-            together_api_key=self.together_api_key,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            stream=stream
-        )
+        check_input = False
+
+        while not check_input:
+            try:
+                output = completion(
+                    messages=messages,
+                    model=self.model,
+                    together_api_key=self.together_api_key,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    stream=stream
+                )
+                check_input = True
+            except:
+                if len(messages) > 3:
+                    messages = messages[:1] + messages[3:]
+                else:
+                    raise ValueError(
+                        f"Input exceeds maximum length of {self.MAX_INPUT_LENGTH} tokens.")
 
         if stream:
             return output

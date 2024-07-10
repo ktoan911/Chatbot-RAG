@@ -14,7 +14,7 @@ st.title("Hedspi Phone Store Chatbot")
 
 # Khởi tạo vector search
 vector_search = RAG.RAG()
-llm = together_api.TogetherLLM(os.environ["EMBEDDING_MODEL"])
+llm = together_api.TogetherLLM(os.environ["LLM_MODEL"])
 
 
 # Tạo bộ nhớ seesion statecho lịch sử chat và query
