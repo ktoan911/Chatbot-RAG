@@ -1,5 +1,3 @@
-import datetime
-
 
 INSTRUCTIONS = """Bạn là một nhân viên bán hàng điện thoại trong cửa 
                 hàng điện thoại di động Hedspi. Nhiệm vụ của bạn là giúp 
