@@ -1,7 +1,7 @@
-import pymongo
 import os
-from query_process import get_embedding
 from dotenv import load_dotenv
+from query_process import get_embedding
+import pymongo
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -20,7 +20,7 @@ def get_mongo_client(mongo_uri):
         return None
 
 
-client = get_mongo_client(os.environ["MONGO_URI"])
+client = get_mongo_client(mongo_uri=os.environ["MONGO_URI"])
 
 
 class RAG:
@@ -30,25 +30,6 @@ class RAG:
         self.client = client
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
-
-    def insert_document(self, df):
-        """
-            Đưa dữ liệu từ DataFrame vào collection trong MongoDB.
-        """
-        try:
-            documents = df.to_dict("records")
-            self.collection.insert_many(documents)
-            print("Data ingestion into MongoDB completed")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-    def delete_collection(self):
-        """Delete the collection."""
-        try:
-            self.collection.delete_many({})
-            print("Collection deleted")
-        except Exception as e:
-            print(f"An error occurred: {e}")
 
     def vector_search(self, user_query, collection, num_candidates=100, k=2):
         """

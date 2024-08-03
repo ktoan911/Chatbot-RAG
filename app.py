@@ -1,9 +1,10 @@
-import together_api
+import groq_api as groq
 import streamlit as st
 import RAG
 from query_process import classification_query, process_query, extension_query
 import os
 from dotenv import load_dotenv
+import prompt
 
 load_dotenv()
 
@@ -14,13 +15,13 @@ st.title("Hedspi Phone Store Chatbot")
 
 # Khởi tạo vector search
 vector_search = RAG.RAG()
-llm = together_api.TogetherLLM(os.environ["LLM_MODEL"])
+llm = groq.GroqLLM()
 
 
 # Tạo bộ nhớ seesion statecho lịch sử chat và query
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "system", "content": "Bạn là một nhân viên bán hàng điện thoại trong cửa hàng điện thoại di động Hedspi. Nhiệm vụ của bạn là giúp khách hàng tìm chiếc điện thoại tốt nhất phù hợp với nhu cầu của họ."}
+        {"role": "system", "content": prompt.model_instructions()}
     ]
 
 # Initialize raw querry in session state
@@ -32,7 +33,7 @@ col1, col2 = st.columns([3, 7])  # chia tỉ lệ  2 cột 25% và 75%
 with col1:
     if st.button("Làm mới cuộc trò chuyện"):
         st.session_state.messages = [
-            {"role": "system", "content": "Bạn là một nhân viên bán hàng điện thoại trong cửa hàng điện thoại di động Hedspi. Nhiệm vụ của bạn là giúp khách hàng tìm chiếc điện thoại tốt nhất phù hợp với nhu cầu của họ."}
+            {"role": "system", "content": prompt.model_instructions()}
         ]
 
         st.session_state.query_list = []
@@ -80,16 +81,14 @@ if prompt := st.chat_input("Bạn cần chúng tôi hỗ trợ gì?"):
     st.session_state.messages.append(
         {"role": "user", "content": clean_query})
 
-    print(st.session_state.messages)
-
     # Generate assistant's response
     with st.chat_message("assistant"):
         placeholder = st.empty()
-        stream = llm.call(st.session_state.messages)
+        stream = llm.call(st.session_state.messages, stream=True)
         response = ""
-        for part in stream:
-            ans_next = part.choices[0].delta.content
-            if ans_next != None:
+        for chunk in stream:
+            ans_next = chunk.choices[0].delta.content or ""
+            if ans_next is not None:
                 response += ans_next
                 placeholder.write(response)
     st.session_state.messages.append(
