@@ -1,12 +1,10 @@
-
-from typing import List  # Import List from typing module
 import os
 import numpy as np
 import json
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
-embedding_model = SentenceTransformer('keepitreal/vietnamese-sbert')
 
+embedding_model = SentenceTransformer('keepitreal/vietnamese-sbert')
 
 class Embedding:
     def __init__(
@@ -15,7 +13,7 @@ class Embedding:
     ):
         self.model = SentenceTransformer(embedding_model)
 
-    def get_embedding(self, doc: List[str]):
+    def get_embedding(self, doc: list[str]):
         """
         Hàm này nhận vào một danh sách các chuỗi văn bản và trả về embeddings cho từng chuỗi.
 
@@ -40,7 +38,7 @@ class Embedding:
 
         return embedding
 
-    def encode(self, docs: List[str]):
+    def encode(self, docs: list[str]):
         try:
             embeddings = self.get_embedding(
                 doc=docs
@@ -56,7 +54,7 @@ class Route():
     def __init__(
         self,
         name: str = None,
-        samples: List = []
+        samples: list = []
     ):
 
         self.name = name
@@ -389,7 +387,7 @@ class ChitchatProdcutsSentimentRoute:
             embedding, routes=[productRoute, chitchatRoute])
         return semanticRouter
 
-    def get_json_routesEmbedding(self, path='routesEmbedding.json'):
+    def get_json_routesEmbedding(self, path: str):
         with open(path, 'r') as f:
             routesEmbedding = json.load(f)
         return routesEmbedding

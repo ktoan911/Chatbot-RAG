@@ -9,6 +9,8 @@ SUMMARY_CHAT_HISTORY_PROMPT = """Based on the user's conversation history and th
                                 history. Do not answer this query, just reconstruct it if necessary, and if there is not enough information to construct a new question, 
                                 keep the original question unchanged"""
 
+
+
 def model_instructions() -> str:
     return INSTRUCTIONS
 

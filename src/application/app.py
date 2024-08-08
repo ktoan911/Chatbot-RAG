@@ -1,21 +1,24 @@
-import groq_api as groq
-import streamlit as st
-import RAG
-from query_process import classification_query, process_query, extension_query
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+import src.infrastructure.API_LLM as LLM
+import streamlit as st
+import src.infrastructure.RAG as RAG
+from src.common.query_process import classification_query, process_query, extension_query
 from dotenv import load_dotenv
-import prompt
+import src.infrastructure.prompt as prompt
 
 load_dotenv()
 
 
 # Streamlit app title
-st.set_page_config(page_title="Hedspi Phone Store", page_icon=":iphone:")
-st.title("Hedspi Phone Store Chatbot")
+st.set_page_config(page_title="Markat", page_icon="	:smiley_cat:")
+st.title("Markat Assistant Chatbot")
 
 # Khởi tạo vector search
 vector_search = RAG.RAG()
-llm = groq.GroqLLM()
+llm = LLM.GroqLLM()
 
 
 # Tạo bộ nhớ seesion statecho lịch sử chat và query

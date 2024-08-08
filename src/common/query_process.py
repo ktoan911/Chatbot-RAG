@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
 import os
 from sentence_transformers import SentenceTransformer
-from sematic_router import ChitchatProdcutsSentimentRoute, SemanticRouter
+import src.infrastructure.prompt as prompt
+from src.infrastructure.sematic_router import ChitchatProdcutsSentimentRoute, SemanticRouter
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -13,17 +14,17 @@ chitchat_prodcuts_sentiment_route = ChitchatProdcutsSentimentRoute()
 senmatic_router = SemanticRouter(embedding_model)
 
 embedding_routes = chitchat_prodcuts_sentiment_route.get_json_routesEmbedding(
-    path=r'routesEmbedding.json')
+    path=r"src\Embedding\routesEmbedding.json")
 
 
-def process_query(query):
+def process_query(query : str) -> str:
     # Loại bỏ stop words và chuyển câu truy vấn về dạng lowercase
     # words = query.lower().strip().split()
     # filtered_words = [word for word in words if word not in stopwords]
     # clean_query = ' '.join(filtered_words)
     # if len(clean_query.replace(' ', '')) == 0:
     #     return query  # is empty query
-    return query
+    return query.strip()
 
 
 # Hàm lấy embedding của câu truy vấn
@@ -48,14 +49,24 @@ def classification_query(queries):
         return False
 
 
-def extension_query(llm, history_query):
+def extension_query(llm, history_query) -> str:
+    """
+    Extend the query to include the chat history
+
+    Args:
+    llm : LLM model
+    history_query : The chat history
+    
+    Returns:
+    str : The extended query
+    """
     summary_query = "###The chat history is {history_query}. ### Output: reconstruct string".format(
         history_query=history_query)
 
     messages = [
         {
             'role': 'system',
-            'content': """Based on the user's conversation history and their latest query that may refer to context in the chat history, construct an independent query in Vietnamese that can be understood without the chat history. Do not answer this query, just reconstruct it if necessary, and if there is not enough information to construct a new question, keep the original question unchanged"""
+            'content': prompt.model_summary_chat_history_prompt()
         },
         {
             "role": "user",

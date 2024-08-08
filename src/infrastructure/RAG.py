@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from query_process import get_embedding
+from src.common.query_process import get_embedding
 import pymongo
 
 # Load the environment variables from the .env file
@@ -138,5 +138,6 @@ class RAG:
             return search_result
         else:
             prompt_query = query + ". " + \
-                "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau (Nếu không có thông tin thì hãy đề xuất sản phẩm khác):"
+                "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau \
+                (Nếu không có thông tin thì hãy đề xuất sản phẩm khác):"
             return f"Query: {prompt_query} \n {search_result}.".replace('<br>', '')

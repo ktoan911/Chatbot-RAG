@@ -11,7 +11,7 @@ This chatbot supports phone marketing using the RAG (Retrieval Augmented Generat
 
 ## Model Architecture Image
 
-![image](Assets/Architecture.jpg)
+![image](Assets/Architecture.png)
 
 ## I. Setting Up the Environment
 #### Step 1: Create a Conda environment named your_env_name with Python 3.11.3
@@ -33,15 +33,15 @@ pip install -r requirements.txt
 
 #### Step 4: Create a .env file and add the following lines, replacing the placeholders with your actual values:
 ```
-TOGETHER_API_KEY = 
-MONGO_URI = 
+GROQ_API_KEY =
+MONGO_URI =
+LLM_MODEL =
 EMBEDDING_MODEL = 
-WEBSITE = 
 DB_NAME = 
-COLLECTION_NAME =
+COLLECTION_NAME = 
 ```
 
-- TOGETHER_API_KEY: Your key to access the [together.ai API](https://www.together.ai/). 
+- GROQ_API_KEY: Your key to access the [groq API](https://console.groq.com). 
 - MONGO_URI: URI of your MongoDB Atlas instance.
 - EMBEDDING_MODEL: Name of the embedding model you're using for text embedding.
 - WEBSITE: Link store's website.
@@ -59,7 +59,6 @@ For this project, we use data following the format below:
 ## III. Features
 
 - We added the feature to identify questions about whether it is necessary to extract information from the database. This is to save time generating answers and system resources, and at the same time prevent the pattern of rambling answers that are not on point.
-![image](Assets/LLM_Classification.jpg)
 
 - We combine the user's query and the information exported from the database according to the following syntax:
 
