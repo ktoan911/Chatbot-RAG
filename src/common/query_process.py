@@ -1,8 +1,13 @@
-from dotenv import load_dotenv
+from __future__ import annotations
+
 import os
+
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
+
 import src.infrastructure.prompt as prompt
-from src.infrastructure.sematic_router import ChitchatProdcutsSentimentRoute, SemanticRouter
+from src.infrastructure.sematic_router import ChitchatProdcutsSentimentRoute
+from src.infrastructure.sematic_router import SemanticRouter
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -14,10 +19,11 @@ chitchat_prodcuts_sentiment_route = ChitchatProdcutsSentimentRoute()
 senmatic_router = SemanticRouter(embedding_model)
 
 embedding_routes = chitchat_prodcuts_sentiment_route.get_json_routesEmbedding(
-    path=r"src\Embedding\routesEmbedding.json")
+    path=r'src\Embedding\routesEmbedding.json',
+)
 
 
-def process_query(query : str) -> str:
+def process_query(query: str) -> str:
     # Loại bỏ stop words và chuyển câu truy vấn về dạng lowercase
     # words = query.lower().strip().split()
     # filtered_words = [word for word in words if word not in stopwords]
@@ -30,11 +36,14 @@ def process_query(query : str) -> str:
 # Hàm lấy embedding của câu truy vấn
 def get_embedding(text: str) -> list[float]:
     if not text.strip():
-        print("Attempted to get embedding for empty text.")
+        print('Attempted to get embedding for empty text.')
         return []
 
-    embedding = embedding_model.encode(text.replace(
-        '###', '').replace('\n', '').replace('<br>', ''))
+    embedding = embedding_model.encode(
+        text.replace(
+            '###', '',
+        ).replace('\n', '').replace('<br>', ''),
+    )
 
     return embedding.tolist()
 
@@ -42,7 +51,8 @@ def get_embedding(text: str) -> list[float]:
 def classification_query(queries):
     for query in queries:
         score, intent = senmatic_router.guide(
-            query, embedding_routes)
+            query, embedding_routes,
+        )
     if intent == 'products':
         return True
     else:
@@ -56,22 +66,23 @@ def extension_query(llm, history_query) -> str:
     Args:
     llm : LLM model
     history_query : The chat history
-    
+
     Returns:
     str : The extended query
     """
-    summary_query = "###The chat history is {history_query}. ### Output: reconstruct string".format(
-        history_query=history_query)
+    summary_query = '###The chat history is {history_query}. ### Output: reconstruct string'.format(
+        history_query=history_query,
+    )
 
     messages = [
         {
             'role': 'system',
-            'content': prompt.model_summary_chat_history_prompt()
+            'content': prompt.model_summary_chat_history_prompt(),
         },
         {
-            "role": "user",
-            "content": summary_query
-        }
+            'role': 'user',
+            'content': summary_query,
+        },
     ]
     return llm.call(messages, stream=False)
 

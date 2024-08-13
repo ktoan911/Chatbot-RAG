@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import os
-from dotenv import load_dotenv
-from src.common.query_process import get_embedding
+
 import pymongo
+from dotenv import load_dotenv
+
+from src.common.query_process import get_embedding
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -12,21 +16,22 @@ def get_mongo_client(mongo_uri):
     try:
         # Kết nối tới MongoDB sử dụng URI
         client = pymongo.MongoClient(
-            mongo_uri, appname="devrel.content.python")
-        print("Connection to MongoDB successful")
+            mongo_uri, appname='devrel.content.python',
+        )
+        print('Connection to MongoDB successful')
         return client
     except pymongo.errors.ConnectionFailure as e:
-        print(f"Connection failed: {e}")
+        print(f'Connection failed: {e}')
         return None
 
 
-client = get_mongo_client(mongo_uri=os.environ["MONGO_URI"])
+client = get_mongo_client(mongo_uri=os.environ['MONGO_URI'])
 
 
 class RAG:
-    def __init__(self, db_name=os.environ["DB_NAME"], collection_name=os.environ["COLLECTION_NAME"]):
-        if not os.environ["MONGO_URI"]:
-            raise ValueError("MongoDB URI is missing")
+    def __init__(self, db_name=os.environ['DB_NAME'], collection_name=os.environ['COLLECTION_NAME']):
+        if not os.environ['MONGO_URI']:
+            raise ValueError('MongoDB URI is missing')
         self.client = client
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
@@ -47,37 +52,37 @@ class RAG:
         query_embedding = get_embedding(user_query)
 
         if query_embedding is None:
-            return "Invalid query or embedding generation failed."
+            return 'Invalid query or embedding generation failed.'
 
         # Định nghĩa các stage trong pipeline
         vector_search_stage = {
-            "$vectorSearch": {
-                "index": "vector_index",
-                "queryVector": query_embedding,
-                "path": "embedding",
-                "numCandidates": num_candidates,  # Số lượng vector ứng viên.
-                "limit": k  # Trả về k vector gần nhất.
-            }
+            '$vectorSearch': {
+                'index': 'vector_index',
+                'queryVector': query_embedding,
+                'path': 'embedding',
+                'numCandidates': num_candidates,  # Số lượng vector ứng viên.
+                'limit': k,  # Trả về k vector gần nhất.
+            },
         }
 
         unset_stage = {
             # Loại bỏ trường embedding khỏi kết quả trả về.
-            "$unset": "embedding"
+            '$unset': 'embedding',
         }
 
         project_stage = {
-            "$project": {
-                "_id": 0,  # Exclude the _id field
-                "url": 1,  # Include the Phone url
-                "title": 1,  # Include the Phone field
-                "product_promotion": 1,  # Include the Description field
+            '$project': {
+                '_id': 0,  # Exclude the _id field
+                'url': 1,  # Include the Phone url
+                'title': 1,  # Include the Phone field
+                'product_promotion': 1,  # Include the Description field
                 'product_specs': 1,  # Include the specs field
                 'current_price': 1,
                 'color_options': 1,
-                "score": {
-                    "$meta": "vectorSearchScore"  # Include the search score
-                }
-            }
+                'score': {
+                    '$meta': 'vectorSearchScore',  # Include the search score
+                },
+            },
         }
 
         # Xây dựng pipeline
@@ -102,15 +107,16 @@ class RAG:
         def get_infomation(text, prompt):
             text = text.replace('\n', '.')
             if text:
-                return f"{prompt} {text}.\n"
+                return f'{prompt} {text}.\n'
             else:
-                return ""
+                return ''
 
         # Lấy vector database từ vector search
         db_information = self.vector_search(
-            query, self.collection, num_candidates, k)
+            query, self.collection, num_candidates, k,
+        )
 
-        search_result = ""
+        search_result = ''
 
         # Duyệt qua kết quả trả về từ vector search và thêm vào search_result
         for i, result in enumerate(db_information):
@@ -119,25 +125,32 @@ class RAG:
             product_promotion = result.get('product_promotion', 'N/A')
             product_specs = result.get('product_specs', 'N/A')
             current_price = result.get('current_price', 'N/A') if result.get(
-                'current_price', 'N/A') else 'Liên hệ để trao đổi thêm'
-            color_options = ", ".join(result.get('color_options', 'N/A'))
+                'current_price', 'N/A',
+            ) else 'Liên hệ để trao đổi thêm'
+            color_options = ', '.join(result.get('color_options', 'N/A'))
 
-            search_result += f"Sản phẩm thứ {i+1}: \n"
+            search_result += f'Sản phẩm thứ {i+1}: \n'
 
-            search_result += get_infomation(url, "Link sản phẩm:")
-            search_result += get_infomation(title, "Tên sản phẩm:")
-            search_result += get_infomation(product_promotion,
-                                            "Ưu đãi:")
-            search_result += get_infomation(product_specs,
-                                            "Chi tiết sản phẩm:")
-            search_result += get_infomation(current_price, "Giá tiền:")
-            search_result += get_infomation(color_options,
-                                            "Các màu điện thoại:")
+            search_result += get_infomation(url, 'Link sản phẩm:')
+            search_result += get_infomation(title, 'Tên sản phẩm:')
+            search_result += get_infomation(
+                product_promotion,
+                'Ưu đãi:',
+            )
+            search_result += get_infomation(
+                product_specs,
+                'Chi tiết sản phẩm:',
+            )
+            search_result += get_infomation(current_price, 'Giá tiền:')
+            search_result += get_infomation(
+                color_options,
+                'Các màu điện thoại:',
+            )
 
         if not combine_query:
             return search_result
         else:
-            prompt_query = query + ". " + \
-                "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau \
-                (Nếu không có thông tin thì hãy đề xuất sản phẩm khác):"
-            return f"Query: {prompt_query} \n {search_result}.".replace('<br>', '')
+            prompt_query = query + '. ' + \
+                'Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau \
+                (Nếu không có thông tin thì hãy đề xuất sản phẩm khác):'
+            return f'Query: {prompt_query} \n {search_result}.'.replace('<br>', '')

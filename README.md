@@ -1,7 +1,7 @@
 # Phone Sale Assistant Chatbot
 
-- Github: [ktoan911](https://github.com/ktoan911) 
-- Email: khanhtoan.forwork@gmail.com 
+- Github: [ktoan911](https://github.com/ktoan911)
+- Email: khanhtoan.forwork@gmail.com
 
 
 
@@ -29,19 +29,19 @@ conda activate ${your_env_name}
 
 ```
 pip install -r requirements.txt
-``` 
+```
 
 #### Step 4: Create a .env file and add the following lines, replacing the placeholders with your actual values:
 ```
 GROQ_API_KEY =
 MONGO_URI =
 LLM_MODEL =
-EMBEDDING_MODEL = 
-DB_NAME = 
-COLLECTION_NAME = 
+EMBEDDING_MODEL =
+DB_NAME =
+COLLECTION_NAME =
 ```
 
-- GROQ_API_KEY: Your key to access the [groq API](https://console.groq.com). 
+- GROQ_API_KEY: Your key to access the [groq API](https://console.groq.com).
 - MONGO_URI: URI of your MongoDB Atlas instance.
 - EMBEDDING_MODEL: Name of the embedding model you're using for text embedding.
 - WEBSITE: Link store's website.
@@ -74,14 +74,4 @@ For this project, we use data following the format below:
 
 This is demo of Phone Sale Assistant Chatbot:
 
-![](Assets/VideoDemo.gif)  
-
-
-
-
-
-
-
-
-
-
+![](Assets/VideoDemo.gif)
