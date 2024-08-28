@@ -1,27 +1,29 @@
 from __future__ import annotations
-import src.infrastructure.prompt as prompt
-from dotenv import load_dotenv
-from src.common.query_process import classification_query, process_query, extension_query
-import src.infrastructure.RAG as RAG
-import streamlit as st
-import src.infrastructure.API_LLM as LLM
 
 import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', '..')))
+
+import streamlit as st
+from dotenv import load_dotenv
+
+import src.infrastructure.API_LLM as LLM
+import src.infrastructure.prompt as prompt
+import src.infrastructure.RAG as RAG
+from src.common.query_process import classification_query
+from src.common.query_process import extension_query
+from src.common.query_process import process_query
 
 
 load_dotenv()
 
 
 # Streamlit app title
-st.set_page_config(page_title='Markat', page_icon='	:smiley_cat:')
-st.title('Markat Assistant Chatbot')
+st.set_page_config(page_title='Hedspi Phone Store', page_icon=':iphone:')
+st.title('Hedspi Phone Store Chatbot')
 
 # Khởi tạo vector search
 vector_search = RAG.RAG()
 llm = LLM.GroqLLM()
+number_chat_history = 5
 
 
 # Tạo bộ nhớ seesion statecho lịch sử chat và query
@@ -103,3 +105,6 @@ if prompt := st.chat_input('Bạn cần chúng tôi hỗ trợ gì?'):
     st.session_state.messages.append(
         {'role': 'assistant', 'content': response},
     )
+    if len(st.session_state.messages) > number_chat_history:
+        st.session_state.messages = st.session_state.messages[:1] + \
+            st.session_state.messages[3:]
