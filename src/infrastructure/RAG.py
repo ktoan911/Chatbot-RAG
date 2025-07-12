@@ -1,156 +1,118 @@
 from __future__ import annotations
 
 import os
+import sys
+from collections import defaultdict
 
-import pymongo
+from graph.graph import Neo4jGraph
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+import torch
+import torch.nn.functional as F
 from dotenv import load_dotenv
+from rapidfuzz import process
 
-from src.common.query_process import get_embedding
+from common.text import TextProcessor
+from databases.phone_db import PhoneDB
 
-# Load the environment variables from the .env file
 load_dotenv()
 
 
-def get_mongo_client(mongo_uri):
-    """Establish connection to the MongoDB."""
-    try:
-        # Kết nối tới MongoDB sử dụng URI
-        client = pymongo.MongoClient(
-            mongo_uri, appname='devrel.content.python',
-        )
-        print('Connection to MongoDB successful')
-        return client
-    except pymongo.errors.ConnectionFailure as e:
-        print(f'Connection failed: {e}')
-        return None
-
-
-client = get_mongo_client(mongo_uri=os.environ['MONGO_URI'])
-
-
 class RAG:
-    def __init__(self, db_name=os.environ['DB_NAME'], collection_name=os.environ['COLLECTION_NAME']):
-        if not os.environ['MONGO_URI']:
-            raise ValueError('MongoDB URI is missing')
-        self.client = client
-        self.db = self.client[db_name]
-        self.collection = self.db[collection_name]
-
-    def vector_search(self, user_query, collection, num_candidates=100, k=2):
-        """
-        Lấy ra các vector gần nhất với vector của user_query từ collection.
-        Args:
-            user_query (str): Câu truy vấn của người dùng.
-            collection (pymongo.collection.Collection): Collection trong MongoDB.
-            num_candidates (int): Số lượng vector ứng viên.
-            k (int): Số lượng vector gần nhất cần lấy ra.
-        Returns:
-            list: Danh sách các vector gần nhất với vector của user_query.
-        """
-
-        # Generate embedding for the user query
-        query_embedding = get_embedding(user_query)
-
-        if query_embedding is None:
-            return 'Invalid query or embedding generation failed.'
-
-        # Định nghĩa các stage trong pipeline
-        vector_search_stage = {
-            '$vectorSearch': {
-                'index': 'vector_index',
-                'queryVector': query_embedding,
-                'path': 'embedding',
-                'numCandidates': num_candidates,  # Số lượng vector ứng viên.
-                'limit': k,  # Trả về k vector gần nhất.
-            },
-        }
-
-        unset_stage = {
-            # Loại bỏ trường embedding khỏi kết quả trả về.
-            '$unset': 'embedding',
-        }
-
-        project_stage = {
-            '$project': {
-                '_id': 0,  # Exclude the _id field
-                'url': 1,  # Include the Phone url
-                'title': 1,  # Include the Phone field
-                'product_promotion': 1,  # Include the Description field
-                'product_specs': 1,  # Include the specs field
-                'current_price': 1,
-                'color_options': 1,
-                'score': {
-                    '$meta': 'vectorSearchScore',  # Include the search score
-                },
-            },
-        }
-
-        # Xây dựng pipeline
-        pipeline = [vector_search_stage, unset_stage, project_stage]
-
-        # Thực thi pipeline
-        results = collection.aggregate(pipeline)
-        return list(results)
-
-    def get_search_result(self, query, num_candidates=100, k=4, combine_query=True):
-        '''
-        Lấy kết quả tìm kiếm từ vector search và trả về dưới dạng chuỗi.
-        Args:
-            query (str): Câu truy vấn của người dùng.
-            num_candidates (int): Số lượng vector ứng viên.
-            k (int): Số lượng vector gần nhất cần lấy ra.
-            combine_query (bool): Kết hợp câu truy vấn với kết quả tìm kiếm hay không.
-        Returns:
-            str: Kết quả tìm kiếm dưới dạng chuỗi.
-        '''
-
-        def get_infomation(text, prompt):
-            text = text.replace('\n', '.')
-            if text:
-                return f'{prompt} {text}.\n'
-            else:
-                return ''
-
-        # Lấy vector database từ vector search
-        db_information = self.vector_search(
-            query, self.collection, num_candidates, k,
+    def __init__(self):
+        self.db = PhoneDB(
+            connection_url=os.environ["MONGO_URI"],
         )
 
-        search_result = ''
+        self.text_processor = TextProcessor()
+        self.graph = Neo4jGraph()  # Comment out until import issues are resolved
+        self.embeddings_graph_nodes = self.graph.get_all_graph_embeddings()
+        self.node_embeddings_norm = F.normalize(self.embeddings_graph_nodes, p=2, dim=1)
+        self.edge_list = self.graph.get_edge()
+        self.node_mapping, _ = self.graph.get_node_mapping_id()
 
-        # Duyệt qua kết quả trả về từ vector search và thêm vào search_result
-        for i, result in enumerate(db_information):
-            url = result.get('url', 'N/A')
-            title = result.get('title', 'N/A')
-            product_promotion = result.get('product_promotion', 'N/A')
-            product_specs = result.get('product_specs', 'N/A')
-            current_price = result.get('current_price', 'N/A') if result.get(
-                'current_price', 'N/A',
-            ) else 'Liên hệ để trao đổi thêm'
-            color_options = ', '.join(result.get('color_options', 'N/A'))
+    def get_senmatic_search_result(self, query, num_candidates=100, k=20) -> list[str]:
+        db_information = self.db.vector_search(
+            query,
+            num_candidates,
+            k,
+        )
 
-            search_result += f'Sản phẩm thứ {i+1}: \n'
+        return self.text_processor.transform_query(db_information)
 
-            search_result += get_infomation(url, 'Link sản phẩm:')
-            search_result += get_infomation(title, 'Tên sản phẩm:')
-            search_result += get_infomation(
-                product_promotion,
-                'Ưu đãi:',
+    def get_graph_search_result(self, query, senmatic_k=5, graph_k=3) -> list[str]:
+        senmatic_search_result = self.get_senmatic_search_result(
+            query=query, k=senmatic_k
+        )
+        grouped_result = defaultdict(list)
+        matches = []
+        for smt in senmatic_search_result:
+            if smt is None or smt == "":
+                continue
+            query_info = self.graph.extract_entities_and_relationships(smt)
+            query_entities, _ = self.graph.process_llm_out(query_info)
+            matches.extend(
+                self._find_closest_entities(query_entities, self.node_mapping)
             )
-            search_result += get_infomation(
-                product_specs,
-                'Chi tiết sản phẩm:',
-            )
-            search_result += get_infomation(current_price, 'Giá tiền:')
-            search_result += get_infomation(
-                color_options,
-                'Các màu điện thoại:',
-            )
+        if not matches or len(matches) == 0:
+            return "Thông tin bổ sung:\n" + ".\n".join(senmatic_search_result)
 
-        if not combine_query:
-            return search_result
-        else:
-            prompt_query = query + '. ' + \
-                'Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau \
-                (Nếu không có thông tin thì hãy đề xuất sản phẩm khác):'
-            return f'Query: {prompt_query} \n {search_result}.'.replace('<br>', '')
+        matches = list(
+            set(
+                [
+                    match_id
+                    for _, match_id, _, _ in matches
+                    if match_id in self.node_mapping
+                ]
+            )
+        )
+
+        for match_id in matches:
+            query_embedding = self.embeddings_graph_nodes[match_id]
+            query_embedding = F.normalize(query_embedding, p=2, dim=0)
+
+            similarity_scores = torch.matmul(
+                query_embedding.unsqueeze(0), self.node_embeddings_norm.T
+            ).squeeze()
+
+            top_k_indices = torch.topk(similarity_scores, graph_k).indices
+            for idx in top_k_indices:
+                similar_node_id = idx.item()
+                # Check for direct connection in the edge list
+                direct_connections = [
+                    e
+                    for e in self.edge_list
+                    if (e[0] == match_id and e[1] == similar_node_id)
+                    or (e[1] == match_id and e[0] == similar_node_id)
+                ]
+                if direct_connections:
+                    for connection in direct_connections:
+                        source = self.node_mapping[connection[0]]
+                        target = self.node_mapping[connection[1]]
+                        relationship = connection[2]
+                        grouped_result[source].append(f"{relationship} {target}")
+        graph_search_result = [
+            f"{src}: {', '.join(rels)}" for src, rels in grouped_result.items()
+        ]
+        return "Thông tin bổ sung:\n" + ".\n".join(
+            sorted(list(set(graph_search_result)))
+        )
+
+    def _find_closest_entities(self, entities, node_mapping):
+        """
+        Finds the closest matching entities in node_mapping for a list of query entities.
+
+        Parameters:
+            entities (list): List of entity names to match.
+            node_mapping (dict): Mapping of node IDs to entity names.
+
+        Returns:
+            list: A list of tuples [(query_entity, closest_match_id, closest_match_name, score)].
+        """
+        results = []
+        node_names = list(node_mapping.values())
+        for entity in entities:
+            closest_match, score, index = process.extractOne(entity, node_names)
+            closest_match_id = list(node_mapping.keys())[index]
+            results.append((entity, closest_match_id, closest_match, score))
+        return results

@@ -1,90 +1,133 @@
 from __future__ import annotations
 
 import os
+import sys
+
+# Add the src directory to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
-import src.infrastructure.prompt as prompt
-from src.infrastructure.sematic_router import ChitchatProdcutsSentimentRoute
-from src.infrastructure.sematic_router import SemanticRouter
+from common.logger import get_logger
+from infrastructure.sematic_router import (
+    ChitchatProdcutsSentimentRoute,
+    SemanticRouter,
+)
+
+
+# Define prompt function directly to avoid import issues
+def model_summary_chat_history_prompt():
+    return """Based on the user's conversation history and their latest query that may
+                                refer to context in the chat history, construct an independent query in Vietnamese that can be understood without the chat
+                                history. Do not answer this query, just reconstruct it if necessary, and if there is not enough information to construct a new question,
+                                keep the original question unchanged"""
+
 
 # Load the environment variables from the .env file
 load_dotenv()
+logger = get_logger(__name__)
 
 # load the embedding model
-embedding_model = SentenceTransformer(os.environ['EMBEDDING_MODEL'])
+embedding_model = SentenceTransformer(os.environ["EMBEDDING_MODEL"])
 
 chitchat_prodcuts_sentiment_route = ChitchatProdcutsSentimentRoute()
 senmatic_router = SemanticRouter(embedding_model)
 
 embedding_routes = chitchat_prodcuts_sentiment_route.get_json_routesEmbedding(
-    path=r'src\Embedding\routesEmbedding.json',
+    path=r"E:\Python\Chatbot-RAG\src\Embedding\routesEmbedding.json",
 )
 
 
-def process_query(query: str) -> str:
-    # Loại bỏ stop words và chuyển câu truy vấn về dạng lowercase
-    # words = query.lower().strip().split()
-    # filtered_words = [word for word in words if word not in stopwords]
-    # clean_query = ' '.join(filtered_words)
-    # if len(clean_query.replace(' ', '')) == 0:
-    #     return query  # is empty query
-    return query.strip()
+class TextProcessor:
+    def process_query(self, query: str) -> str:
+        return query.strip()
 
+    def _get_infomation(self, text, prompt):
+        text = text.replace("\n", ".")
+        if text:
+            return f"{prompt} {text}.\n"
+        else:
+            return ""
 
-# Hàm lấy embedding của câu truy vấn
-def get_embedding(text: str) -> list[float]:
-    if not text.strip():
-        print('Attempted to get embedding for empty text.')
-        return []
+    def transform_query(self, db_information: list) -> str:
+        results = []
+        for _, result in enumerate(db_information):
+            title = result.get("title", "N/A")
+            product_promotion = result.get("product_promotion", "N/A")
+            product_specs = result.get("product_specs", "N/A")
+            current_price = (
+                result.get("current_price", "N/A")
+                if result.get(
+                    "current_price",
+                    "N/A",
+                )
+                else "Liên hệ để trao đổi thêm"
+            )
+            color_options = ", ".join(result.get("color_options", "N/A"))
+            search_result = ""
 
-    embedding = embedding_model.encode(
-        text.replace(
-            '###', '',
-        ).replace('\n', '').replace('<br>', ''),
-    )
+            search_result += self._get_infomation(title, "Tên sản phẩm:")
+            search_result += self._get_infomation(
+                product_promotion,
+                "Ưu đãi:",
+            )
+            search_result += self._get_infomation(
+                product_specs,
+                "Chi tiết sản phẩm:",
+            )
+            search_result += self._get_infomation(current_price, "Giá tiền:")
+            search_result += self._get_infomation(
+                color_options,
+                "Các màu điện thoại:",
+            )
+            results.append(search_result)
+        return results
 
-    return embedding.tolist()
+    # Hàm lấy embedding của câu truy vấn
+    def get_embedding(self, text: str) -> list[float]:
+        if not text.strip():
+            logger.info("Attempted to get embedding for empty text.")
+            return []
 
-
-def classification_query(queries):
-    for query in queries:
-        score, intent = senmatic_router.guide(
-            query, embedding_routes,
+        embedding = embedding_model.encode(
+            text.replace(
+                "###",
+                "",
+            )
+            .replace("\n", "")
+            .replace("<br>", ""),
         )
-    if intent == 'products':
-        return True
-    else:
-        return False
 
+        return embedding.tolist()
 
-def extension_query(llm, history_query) -> str:
-    """
-    Extend the query to include the chat history
+    def classification_query(self, queries):
+        for query in queries:
+            score, intent = senmatic_router.guide(
+                query,
+                embedding_routes,
+            )
+        if intent == "products":
+            return True
+        else:
+            return False
 
-    Args:
-    llm : LLM model
-    history_query : The chat history
+    def extension_query(self, llm, history_query) -> str:
+        summary_query = "###The chat history is {history_query}. ### Output: reconstruct string".format(
+            history_query=history_query,
+        )
 
-    Returns:
-    str : The extended query
-    """
-    summary_query = '###The chat history is {history_query}. ### Output: reconstruct string'.format(
-        history_query=history_query,
-    )
-
-    messages = [
-        {
-            'role': 'system',
-            'content': prompt.model_summary_chat_history_prompt(),
-        },
-        {
-            'role': 'user',
-            'content': summary_query,
-        },
-    ]
-    return llm.call(messages, stream=False)
+        messages = [
+            {
+                "role": "system",
+                "content": model_summary_chat_history_prompt(),
+            },
+            {
+                "role": "user",
+                "content": summary_query,
+            },
+        ]
+        return llm.call(messages, stream=False)
 
 
 # stopwords = [
