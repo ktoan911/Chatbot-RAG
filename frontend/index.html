@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chatbot - Trợ lý thông minh</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components/chat.css">
+    <link rel="stylesheet" href="css/components/sidebar.css">
+    <link rel="stylesheet" href="css/components/modal.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <span class="logo-text">RAG Chatbot</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <button class="new-chat-btn" id="newChatBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>Cuộc trò chuyện mới</span>
+                </button>
+                
+                <div class="chat-history-section">
+                    <h3 class="section-title">Lịch sử trò chuyện</h3>
+                    <div class="chat-history-list" id="chatHistoryList">
+                        <!-- Chat history items will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="sidebar-actions">
+                    <button class="action-btn" id="exportHistoryBtn">
+                        <i class="fas fa-download"></i>
+                        <span>Xuất lịch sử</span>
+                    </button>
+                    <button class="action-btn" id="settingsBtn">
+                        <i class="fas fa-cog"></i>
+                        <span>Cài đặt</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-container">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <h1>Trợ lý AI thông minh</h1>
+                    <p class="chat-subtitle">Được hỗ trợ bởi RAG (Retrieval-Augmented Generation)</p>
+                </div>
+                <div class="chat-actions">
+                    <button class="header-btn" id="clearChatBtn" title="Xóa cuộc trò chuyện">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <div class="connection-status" id="connectionStatus">
+                        <div class="status-dot"></div>
+                        <span class="status-text">Đang kết nối...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <div class="welcome-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h2>Chào mừng đến với RAG Chatbot!</h2>
+                    <p>Tôi là trợ lý AI thông minh được trang bị công nghệ RAG. Hãy đặt câu hỏi để bắt đầu cuộc trò chuyện.</p>
+                    <div class="suggested-questions">
+                        <button class="suggestion-btn" data-question="Bạn có thể giúp tôi điều gì?">
+                            Bạn có thể giúp tôi điều gì?
+                        </button>
+                        <button class="suggestion-btn" data-question="RAG là gì?">
+                            RAG là gì?
+                        </button>
+                        <button class="suggestion-btn" data-question="Cách thức hoạt động của bạn như thế nào?">
+                            Cách thức hoạt động của bạn như thế nào?
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span class="typing-text">AI đang suy nghĩ...</span>
+                </div>
+                
+                <div class="chat-input-wrapper">
+                    <div class="input-container">
+                        <textarea 
+                            id="messageInput" 
+                            placeholder="Nhập tin nhắn của bạn..." 
+                            rows="1"
+                            maxlength="1000"
+                        ></textarea>
+                        <div class="input-actions">
+                            <button class="attachment-btn" id="attachmentBtn" title="Đính kèm file">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button class="send-btn" id="sendBtn" title="Gửi tin nhắn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-footer">
+                        <div class="character-count">
+                            <span id="charCount">0</span>/1000
+                        </div>
+                        <div class="input-hint">
+                            Nhấn Enter để gửi, Shift+Enter để xuống dòng
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cài đặt</h3>
+                <button class="modal-close" id="closeSettingsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="historyCount">Số lượng tin nhắn lưu trữ:</label>
+                    <input type="number" id="historyCount" min="1" max="100" value="10">
+                    <small>Số lượng tin nhắn được lưu trong lịch sử chat</small>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="apiEndpoint">API Endpoint:</label>
+                    <input type="text" id="apiEndpoint" value="http://localhost:5000" readonly>
+                    <small>Địa chỉ server backend</small>
+                </div>
+                
+                <div class="setting-group">
+                    <label>Theme:</label>
+                    <div class="theme-options">
+                        <button class="theme-btn active" data-theme="light">
+                            <i class="fas fa-sun"></i> Sáng
+                        </button>
+                        <button class="theme-btn" data-theme="dark">
+                            <i class="fas fa-moon"></i> Tối
+                        </button>
+                        <button class="theme-btn" data-theme="auto">
+                            <i class="fas fa-adjust"></i> Tự động
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelSettings">Hủy</button>
+                <button class="btn btn-primary" id="saveSettings">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Đang xử lý...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/api/chatAPI.js"></script>
+    <script src="js/components/chat.js"></script>
+    <script src="js/components/sidebar.js"></script>
+    <script src="js/components/modal.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
