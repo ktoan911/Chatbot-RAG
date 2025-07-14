@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import sys
-import time
 from collections import defaultdict
 
 # Use relative import since graph is in the same service directory
@@ -11,11 +10,10 @@ from .graph.graph import Neo4jGraph
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import torch
 import torch.nn.functional as F
-from dotenv import load_dotenv
-from rapidfuzz import process
-
 from common.text import TextProcessor
+from dotenv import load_dotenv
 from model.phone_db import PhoneDB
+from rapidfuzz import process
 
 load_dotenv()
 

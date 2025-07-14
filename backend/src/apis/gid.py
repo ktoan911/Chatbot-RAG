@@ -9,17 +9,53 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from controller.message_controller import MesageController
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from common.logger import get_logger
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-controller = MesageController(num_history=10)
+CORS(app)  
+controller = None
+is_ready = False
+logger = get_logger("ChatbotRAGAPI")
+
+
+def initialize_controller():
+    global controller, is_ready
+
+    logger.info("🔄 Đang khởi tạo Chatbot RAG system...")
+    start_time = time.time()
+
+    try:
+        logger.info("📚 Đang khởi tạo Message Controller...")
+        controller = MesageController(num_history=10)
+
+        logger.info("Đang warmup system với test query...")
+        _ = controller.get_message("Xin chào, bạn có thể giới thiệu về sản phẩm không?")
+        controller.delete_history()
+
+        initialization_time = time.time() - start_time
+        logger.info(
+            f"Hệ thống đã sẵn sàng! Thời gian khởi tạo: {initialization_time:.2f}s"
+        )
+        logger.info("Server đã sẵn sàng nhận requests...")
+
+        is_ready = True
+
+    except Exception as e:
+        logger.info(f"Lỗi khi khởi tạo system: {str(e)}")
+        raise e
+
+initialize_controller()
 
 
 @app.route("/", methods=["GET"])
 def health_check():
-    """Health check endpoint"""
     return jsonify(
-        {"status": "healthy", "service": "Chatbot RAG API", "timestamp": time.time()}
+        {
+            "status": "healthy",
+            "service": "Chatbot RAG API",
+            "timestamp": time.time(),
+            "ready": is_ready,
+        }
     )
 
 

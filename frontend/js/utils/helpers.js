@@ -215,6 +215,11 @@ function sanitizeHtml(str) {
  * @returns {string} Escaped string
  */
 function escapeHtml(str) {
+    // Handle null, undefined, or non-string values
+    if (str == null || typeof str !== 'string') {
+        return '';
+    }
+    
     return str
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')

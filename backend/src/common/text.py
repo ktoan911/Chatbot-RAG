@@ -7,10 +7,9 @@ import sys
 # Add the src directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+from common.logger import get_logger
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
-
-from common.logger import get_logger
 from service.sematic_router import (
     ChitchatProdcutsSentimentRoute,
     SemanticRouter,

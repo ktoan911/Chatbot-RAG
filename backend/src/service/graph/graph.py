@@ -12,15 +12,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 
 import warnings
 
-from dotenv import load_dotenv
-from neo4j import GraphDatabase
-from torch_geometric.data import Data
-
 from common.logger import get_logger
 from common.text import TextProcessor
+from dotenv import load_dotenv
 from model.phone_db import PhoneDB
+from neo4j import GraphDatabase
 from service.LLM.llm import LLM
 from service.LLM.PROMPT import extract_entity_relationship_prompt
+from torch_geometric.data import Data
 
 from .gae import GAE  # Use relative import for local gae module
 

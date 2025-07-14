@@ -171,7 +171,7 @@ class ChatComponent {
                 Utils.showToast('Tin nhắn đã được gửi thành công', 'success', 2000);
             } else {
                 // Handle error
-                this.addMessage('assistant', `Xin lỗi, đã xảy ra lỗi: ${response.error}`, {
+                this.addMessage('assistant', `Kết nối mạng không ổn định, vui lòng kiểm tra lại!`, {
                     isError: true
                 });
                 Utils.showToast(`Lỗi: ${response.error}`, 'error');
@@ -196,10 +196,19 @@ class ChatComponent {
      * @returns {Object} Message object
      */
     addMessage(type, content, options = {}) {
+        // Validate input
+        if (!type || (content == null)) {
+            console.warn('❌ Invalid message data:', { type, content });
+            return null;
+        }
+
+        // Ensure content is a string
+        const safeContent = String(content || '');
+
         const message = {
             id: Utils.generateId(),
             type: type,
-            content: content,
+            content: safeContent,
             timestamp: Date.now() / 1000,
             ...options
         };
@@ -462,14 +471,40 @@ class ChatComponent {
      * Load messages from local storage
      */
     loadStoredMessages() {
-        const stored = Utils.storage.get('chat_messages', []);
-        if (stored.length > 0) {
-            this.messages = stored;
-            this.hideWelcomeMessage();
-            
-            stored.forEach(message => {
-                this.renderMessage(message);
-            });
+        try {
+            const stored = Utils.storage.get('chat_messages', []);
+            if (stored.length > 0) {
+                // Validate and filter messages
+                const validMessages = stored.filter(message => {
+                    return message && 
+                           typeof message === 'object' && 
+                           message.type && 
+                           message.content !== undefined &&
+                           message.timestamp;
+                });
+                
+                if (validMessages.length > 0) {
+                    this.messages = validMessages;
+                    this.hideWelcomeMessage();
+                    
+                    validMessages.forEach(message => {
+                        try {
+                            this.renderMessage(message);
+                        } catch (error) {
+                            console.warn('❌ Error rendering stored message:', error, message);
+                        }
+                    });
+                    
+                    // Update storage with valid messages only
+                    if (validMessages.length !== stored.length) {
+                        this.saveMessagesToStorage();
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error loading stored messages:', error);
+            // Clear corrupted data
+            Utils.storage.remove('chat_messages');
         }
     }
 
@@ -544,7 +579,7 @@ class ChatComponent {
                     });
                     this.saveMessagesToStorage();
                 } else {
-                    this.addMessage('assistant', `Xin lỗi, đã xảy ra lỗi: ${response.error}`, {
+                    this.addMessage('assistant', `Kết nối mạng không ổn định, vui lòng kiểm tra lại!}`, {
                         isError: true
                     });
                 }

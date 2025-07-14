@@ -87,8 +87,6 @@ class LLM:
                 if self.api_key_index >= len(self.keys):
                     self.api_key_index = 0
                     self.num_try -= 1
-                if self.api_key_index >= len(self.keys):
-                    return "Internet error. Please check your connection."
                 self.client = genai.Client(api_key=self.keys[self.api_key_index])
 
         return "Internet error. Please check your connection."
