@@ -2,16 +2,19 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 from collections import defaultdict
 
 # Use relative import since graph is in the same service directory
 from .graph.graph import Neo4jGraph
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from common.text import TextProcessor
 from dotenv import load_dotenv
+from duckduckgo_search import DDGS
 from model.phone_db import PhoneDB
 from rapidfuzz import process
 
@@ -37,6 +40,9 @@ class RAG:
         self.edge_lookup = {}
         for src, tgt, rel in self.edge_list:
             self.edge_lookup[(src, tgt)] = rel
+
+        self.ddgs = DDGS()
+        self.all_phones = {i["title"]: i["url"] for i in self.db.get_all()}
 
     def get_senmatic_search_result(self, query, num_candidates=100, k=20) -> list[str]:
         db_information = self.db.vector_search(
@@ -128,3 +134,38 @@ class RAG:
             closest_match_id = list(node_mapping.keys())[index]
             results.append((entity, closest_match_id, closest_match, score))
         return results
+
+    def get_web_search_result(
+        self, query: str, max_results: int = 10, num_tries=3
+    ) -> list[dict]:
+        web_results = []
+        n = num_tries
+        while n > 0:
+            try:
+                web_results = self.ddgs.text(query, max_results=max_results)
+                web_results = [
+                    f"Tiêu đề: {result['title']}. Nguồn:{result['href']}. Nội dung:{result['body']}"
+                    for result in web_results
+                ]
+                return "Thông tin bổ sung:\n" + ".\n".join(
+                    sorted(list(set(web_results)))
+                )
+            except Exception:
+                time.sleep(0.5)
+                n -= 1
+        return "Không tìm thấy thông tin bổ sung từ web."
+
+    def get_shop_info(self, url=os.environ["LOCATION_URL"]):
+        data = pd.read_csv(url).to_dict(orient="records")
+        loc = [
+            f"Cơ sở {i}: {item['location']}.Link google map: {item['maps']}. Giờ mở cửa: {item['open']}"
+            for i, item in enumerate(data, start=1)
+        ]
+
+        return "Thông tin cửa hàng:\n" + ".\n".join(sorted(list(set(loc))))
+
+    def get_product_link(self, product_name: str):
+        sim_product = process.extract(product_name, self.all_phones.keys(), limit=3)
+        return "Thông tin bổ sung: \n" + "\n".join(
+            [f"{name} - {self.all_phones[name]}" for name, _, _ in sim_product]
+        )

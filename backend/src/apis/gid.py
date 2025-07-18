@@ -6,30 +6,36 @@ import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from controller.message_controller import MesageController
+from common.logger import get_logger
+from controller.agent import Agent
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from common.logger import get_logger
+from infrastructure.controller_service import controller_service
 
 app = Flask(__name__)
-CORS(app)  
+CORS(app)
 controller = None
 is_ready = False
 logger = get_logger("ChatbotRAGAPI")
+agent = None
 
 
 def initialize_controller():
-    global controller, is_ready
+    global controller, is_ready, agent
 
     logger.info("🔄 Đang khởi tạo Chatbot RAG system...")
     start_time = time.time()
 
     try:
+        logger.info("📦 Đang khởi tạo agent")
+        agent = Agent()
         logger.info("📚 Đang khởi tạo Message Controller...")
-        controller = MesageController(num_history=10)
+        controller = controller_service.get_controller()
 
         logger.info("Đang warmup system với test query...")
-        _ = controller.get_message("Xin chào, bạn có thể giới thiệu về sản phẩm không?")
+        _ = controller.get_general_message(
+            "Xin chào, bạn có thể giới thiệu về sản phẩm không?"
+        )
         controller.delete_history()
 
         initialization_time = time.time() - start_time
@@ -41,38 +47,49 @@ def initialize_controller():
         is_ready = True
 
     except Exception as e:
-        logger.info(f"Lỗi khi khởi tạo system: {str(e)}")
+        logger.error(f"Lỗi khi khởi tạo system: {str(e)}")
         raise e
 
+
+# Initialize controller on startup
 initialize_controller()
 
 
-@app.route("/", methods=["GET"])
+@app.route("/health", methods=["GET"])
 def health_check():
-    return jsonify(
-        {
-            "status": "healthy",
-            "service": "Chatbot RAG API",
-            "timestamp": time.time(),
-            "ready": is_ready,
-        }
-    )
+    return jsonify({"status": "healthy" if is_ready else "initializing"})
 
 
 @app.route("/get_message", methods=["POST"])
-def get_message():
+def chat():
     try:
         data = request.get_json()
         if not data or "input" not in data:
-            return jsonify({"error": "Missing 'input' field"}), 400
+            return jsonify({"error": "Prompt is required"}), 400
 
-        start = time.time()
-        response = controller.get_message(data.get("input", ""))
+        prompt = data["input"]
 
-        return jsonify(
-            {"response": response, "time": time.time() - start, "status": "success"}
-        )
+        # Sử dụng event loop có sẵn thay vì tạo mới
+        try:
+            start = time.time()
+
+            result = agent.execute(prompt)
+            full_query = result.text if hasattr(result, "text") else str(result)
+            response_text = controller.get_llm_response(full_query)
+
+            return jsonify(
+                {
+                    "response": response_text,
+                    "time": time.time() - start,
+                    "status": "success",
+                }
+            )
+        except Exception as e:
+            logger.info(f"Lỗi khi xử lý MCP agent: {e}")
+            return jsonify({"error": str(e), "status": "error"}), 500
+
     except Exception as e:
+        logger.info(f"Lỗi trong endpoint /get_message: {e}")
         return jsonify({"error": str(e), "status": "error"}), 500
 
 
@@ -152,4 +169,5 @@ def internal_error(error):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    logger.info("🚀 Starting Flask API server...")
+    app.run(host="0.0.0.0", port=5000, debug=True)

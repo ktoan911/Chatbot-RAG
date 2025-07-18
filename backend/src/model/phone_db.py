@@ -6,7 +6,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import dotenv
 import pymongo
-
 from common.logger import get_logger
 from common.text import TextProcessor
 
@@ -78,3 +77,7 @@ class PhoneDB:
         # Thực thi pipeline
         results = self._collection.aggregate(pipeline)
         return list(results)
+
+    def __del__(self):
+        if self.connection:
+            self.connection.close()
